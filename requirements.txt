@@ -1,0 +1,6 @@
+loguru==0.7.2
+tqdm==4.66.4
+web3==6.19.0
+questionary==2.0.1
+rich==13.8.1
+fake-useragent==1.5.1
