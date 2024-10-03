@@ -23,4 +23,8 @@ pip install -r requirements.txt
 ### BitCow module
 
 * `SWAP_VALUES` 
-* `SWAP_BACK_VALUES` 
+* `SWAP_BACK_VALUES`
+
+### Avalon module
+
+* `DEPOSIT_VALUE` 
