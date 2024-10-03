@@ -19,3 +19,8 @@ pip install -r requirements.txt
 
 * `AMOUNT_TO_WRAP` 
 * `WRAP_TX_COUNT` 
+
+### BitCow module
+
+* `SWAP_VALUES` 
+* `SWAP_BACK_VALUES` 
