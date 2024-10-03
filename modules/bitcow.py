@@ -1,4 +1,6 @@
+import settings
 from modules.config import BITCOW, BITCOW_ABI, BITUSD, INFINITE_AMOUNT, WBTC, logger
+from modules.utils import sleep
 from modules.wallet import Wallet
 
 
@@ -7,6 +9,23 @@ class BitCow(Wallet):
         super().__init__(private_key, counter)
         self.module_str += "BitCow |"
         self.contract = self.get_contract(BITCOW, abi=BITCOW_ABI)
+
+    def swap(self, to_token, amount, percentage):
+        if to_token == "BITUSD":
+            tx_status = self.swap_btc_to_bitusd(amount)
+            if tx_status:
+                sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+
+            # Perform reverse swap
+            return self.swap_bitusd_to_btc(percentage)
+
+        elif to_token == "WBTC":
+            tx_status = self.swap_btc_to_wbtc(amount)
+            if tx_status:
+                sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+
+            # Perform reverse swap
+            return self.swap_wbtc_to_btc(percentage)
 
     def swap_btc_to_bitusd(self, amount):
         """Function: swapBTCtoERC20 (address[] pools, bool[] isXtoYs, uint256 minOutputAmount)"""

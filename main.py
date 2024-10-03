@@ -1,8 +1,11 @@
 import random
 
 import questionary
+from rich import print as rich_print
+from rich.text import Text
 
 import settings
+from modules.avalon import Avalon
 from modules.bitcow import BitCow
 from modules.config import logger
 from modules.draw import LuckyDraw
@@ -29,9 +32,9 @@ def load_proxies(file_path):
     return proxies
 
 
-def process_wallets(keys, action_callback):
+def process_wallets(keys, action_callback, *args, **kwargs):
     for index, key in enumerate(keys, start=1):
-        tx_status = action_callback(key, index, len(keys))
+        tx_status = action_callback(key, index, len(keys), *args, **kwargs)
 
         # Sleep between wallets
         if tx_status and index < len(keys):
@@ -44,7 +47,16 @@ def parse_accounts(keys):
 
     for index, key in enumerate(keys, start=1):
         wallet = Wallet(key, None)
-        print(f"{index} {wallet.address}: {wallet.tx_count} transaction(s)")
+
+        if wallet.tx_count >= 50:
+            text = Text(
+                f"{index} {wallet.address}: {wallet.tx_count} transaction(s)",
+                style="green",
+            )
+        else:
+            text = Text(f"{index} {wallet.address}: {wallet.tx_count} transaction(s)")
+
+        rich_print(text)
         wallets_data.append((index, wallet.address, wallet.tx_count))
 
     create_csv("wallets.csv", wallets_data)
@@ -76,36 +88,26 @@ def check_in_owlto_action(key, index, total):
     return owlto.check_in()
 
 
-def lucky_draw_action(key, index, total, proxies):
-    proxy = random.choice(proxies) if settings.USE_PROXY else None
+def lucky_draw_action(key, index, total, proxies=None):
+    proxy = random.choice(proxies) if settings.USE_PROXY and proxies else None
     draw = LuckyDraw(key, f"[{index}/{total}]", proxy)
+
     return draw.get_draw()
 
 
-def swap_btc_to_wbtc_action(key, index, total):
+def swap_btc_action(key, index, total, to_token):
     bitcow = BitCow(key, f"[{index}/{total}]")
-
     amount = get_rand_amount(*settings.SWAP_VALUES)
-    tx_status = bitcow.swap_btc_to_wbtc(amount)
-
-    if tx_status:
-        sleep(*settings.SLEEP_BETWEEN_ACTIONS)
-
     rand_percentage = random.randint(*settings.SWAP_BACK_VALUES)
-    return bitcow.swap_wbtc_to_btc(rand_percentage)
+
+    return bitcow.swap(to_token, amount, rand_percentage)
 
 
-def swap_btc_to_bitusd_action(key, index, total):
-    bitcow = BitCow(key, f"[{index}/{total}]")
+def avalon_depoit(key, index, total):
+    avalon = Avalon(key, f"[{index}/{total}]")
+    amount = get_rand_amount(*settings.DEPOSIT_VALUE)
 
-    amount = get_rand_amount(*settings.SWAP_VALUES)
-    tx_status = bitcow.swap_btc_to_bitusd(amount)
-
-    if tx_status:
-        sleep(*settings.SLEEP_BETWEEN_ACTIONS)
-
-    rand_percentage = random.randint(*settings.SWAP_BACK_VALUES)
-    return bitcow.swap_bitusd_to_btc(rand_percentage)
+    avalon.deposit_native_token(amount)
 
 
 def main():
@@ -127,13 +129,13 @@ def main():
             "Swap BTC > WBTC > BTC",
             "Swap BTC > BITUSD > WBTC",
             "Check in with Owlto",
+            "Deposit to Avalon",
         ],
     ).ask()
 
     # Handle different actions
     if action == "Parse Accounts":
         parse_accounts(keys)
-        exit(0)
 
     elif action == wrap_btc_option:
         process_wallets(keys, wrap_btc_action)
@@ -145,16 +147,16 @@ def main():
         process_wallets(keys, check_in_owlto_action)
 
     elif action == "Lucky Draw":
-        process_wallets(
-            keys,
-            lambda key, index, total: lucky_draw_action(key, index, total, proxies),
-        )
+        process_wallets(keys, lucky_draw_action, proxies=proxies)
 
     elif action == "Swap BTC > WBTC > BTC":
-        process_wallets(keys, swap_btc_to_wbtc_action)
+        process_wallets(keys, swap_btc_action, to_token="WBTC")
 
     elif action == "Swap BTC > BITUSD > WBTC":
-        process_wallets(keys, swap_btc_to_bitusd_action)
+        process_wallets(keys, swap_btc_action, to_token="BITUSD")
+
+    elif action == "Deposit to Avalon":
+        process_wallets(keys, avalon_depoit)
 
     else:
         print("Invalid action")
