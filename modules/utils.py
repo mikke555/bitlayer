@@ -1,4 +1,5 @@
 import csv
+import os
 import random
 import time
 from datetime import datetime
@@ -6,12 +7,22 @@ from datetime import datetime
 from tqdm import tqdm
 from web3 import Web3
 
+from modules.config import logger
 
-def create_csv(path, data):
-    with open(path, "w", encoding="utf-8", newline="") as file:
+
+def create_csv(path, headers, data):
+    directory = os.path.dirname(path)
+
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
+
+    if not os.path.exists(path):
+        logger.success(f"{path} created \n")
+
+    with open(path, "a", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
 
-        writer.writerow(["№", "Wallet", "TX count"])
+        writer.writerow(headers)
         writer.writerows(data)
 
 

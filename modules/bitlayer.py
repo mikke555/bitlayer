@@ -7,7 +7,7 @@ from rich import print_json
 import settings
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
-from modules.utils import random_sleep, sleep
+from modules.utils import create_csv, random_sleep, sleep
 from modules.wallet import Wallet
 
 
@@ -74,19 +74,11 @@ class Bitlayer(Wallet):
 
         finally:
             total_points, level, daily_tasks, _ = self.client.get_user_stats()
-            self.create_report(self.address, self.tx_count, total_points, level)
+            csv_headers = ["Wallet", "TX count", "Points", "Level"]
+            csv_data = [[self.address, self.tx_count, total_points, level]]
+            create_csv("reports/wallets.csv", csv_headers, csv_data)
+
             return True
-
-    def create_report(self, address, tx_count, total_points, level):
-        filename = "reports/wallets.csv"
-        file_exists = os.path.isfile(filename)
-
-        with open(filename, "a", encoding="utf-8", newline="") as file:
-            writer = csv.writer(file)
-            if not file_exists:
-                writer.writerow(["Wallet", "TX count", "Points", "Level"])
-
-            writer.writerow([address, tx_count, total_points, level])
 
     def draw(self, lottery_id, expire_time):
         """Build and send the transaction for the lottery draw."""

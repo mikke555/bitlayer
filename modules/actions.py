@@ -76,8 +76,8 @@ class ActionHandler:
             rich_print(text)
             wallets_data.append((index, wallet.address, wallet.tx_count))
 
-        create_csv("reports/tx_count.csv", wallets_data)
-        logger.success(f"tx_count.csv created \n")
+        create_csv("reports/tx_count.csv", ["№", "Wallet", "TX count"], wallets_data)
+        
 
     def lucky_draw(self, key, index, total):
         proxy = self.get_proxy(index)
