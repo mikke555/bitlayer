@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ### Wrap BTC module
 
-* `AMOUNT_TO_WRAP` 
+* `WRAP_VALUE ` 
 * `WRAP_TX_COUNT` 
 
 ### BitCow module
