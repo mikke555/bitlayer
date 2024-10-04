@@ -94,7 +94,7 @@ class ActionHandler:
         tx_count = random.randint(*settings.WRAP_TX_COUNT)
 
         for _ in range(tx_count):
-            rand_amount = random.uniform(*settings.AMOUNT_TO_WRAP)
+            rand_amount = random.uniform(*settings.WRAP_VALUE)
             tx_status = wrapper.deposit(rand_amount)
 
             if tx_status:
