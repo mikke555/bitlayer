@@ -33,4 +33,3 @@ def sleep(from_sleep, to_sleep, label="Sleeping"):
         range(x), desc=desc, bar_format=f"{{desc}} | {label} {{n_fmt}}/{{total_fmt}}"
     ):
         time.sleep(1)
-    print()

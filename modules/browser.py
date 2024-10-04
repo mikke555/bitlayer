@@ -1,9 +1,14 @@
+import time
+
 import requests
 from eth_account import Account
 from eth_account.messages import encode_defunct
 from fake_useragent import UserAgent
+from rich import print_json
 
+import settings
 from modules.config import logger
+from modules.utils import random_sleep
 
 
 class Browser:
@@ -51,6 +56,80 @@ class Browser:
         else:
             logger.error("Authorization failed!")
             raise Exception(f"Authorization failed: {data}")
+
+    def get_user_stats(self):
+        url = "https://www.bitlayer.org/me?_data=routes%2F%28%24lang%29._app%2B%2Fme%2B%2F_index"
+
+        resp = self.session.get(url)
+        data = resp.json()
+
+        total_points = data["profile"]["totalPoints"]
+        level = data["profile"]["level"]
+        daily_tasks = data["tasks"]["dailyTasks"]
+        tasks_of_interest = [task for task in daily_tasks if task["taskId"] in [1, 2]]
+        ongoing_task = data["tasks"]["ongoingTask"]
+
+        logger.info(f"{self.module_str} Total points: {total_points}, lvl {level}")
+
+        return total_points, level, tasks_of_interest, ongoing_task
+
+    def start_task(self, task_id, task_name):
+        url = "https://www.bitlayer.org/me/task/start"
+
+        resp = self.session.post(url, json={"taskId": task_id})
+        data = resp.json()
+
+        if data.get("message") == "ok":
+            logger.info(f"{self.module_str} Started {task_name}")
+            return data["message"]
+        else:
+            logger.error(f"{self.module_str} Something went wrong")
+            raise Exception(f"Failed to start {task_name}: {data}")
+
+    def claim_tx_rewards(self, task_id, task_name, pp):
+        url = "https://www.bitlayer.org/me/task/verify"
+
+        if not pp:
+            logger.warning(f"{self.module_str} No rewards to claim or already claimed")
+            return
+
+        self.start_task(task_id, task_name)
+        random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+
+        resp = self.session.post(url, json={"taskId": task_id})
+        data = resp.json()
+
+        if data.get("message") == "ok":
+            logger.success(f"{self.module_str} Claimed {pp} points in {task_name}")
+            return True
+        else:
+            logger.error(f"{self.module_str} Something went wrong")
+            raise Exception(f"Failed to claim task {task_id}: {data}")
+
+    def wait_for_daily_browse_status(self):
+        url = "https://www.bitlayer.org/me/task/report"
+
+        resp = self.session.post(url, json={"taskId": 1, "pageName": "dapp_center"})
+        checked = resp.json().get("checked", False)
+
+        if not checked:
+            time.sleep(5)
+            logger.info(f"{self.module_str} Claimable: {checked}")
+            return self.wait_for_daily_browse_status()
+        else:
+            return checked
+
+    def claim_task(self, task_id, task_name, pp):
+        url = "https://www.bitlayer.org/me/task/claim"
+
+        resp = self.session.post(url, json={"taskId": task_id, "taskType": 1})
+        data = resp.json()
+
+        if data.get("message") == "ok":
+            logger.success(f"{self.module_str} Claimed {pp} points for {task_name}")
+        else:
+            logger.error(f"{self.module_str} Something went wrong")
+            raise Exception(f"Failed to claim task {task_id}: {data}")
 
     def get_lottery_info(self):
         """Get lottery eligibility"""

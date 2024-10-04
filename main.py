@@ -7,8 +7,8 @@ from rich.text import Text
 import settings
 from modules.avalon import Avalon
 from modules.bitcow import BitCow
+from modules.bitlayer import Bitlayer
 from modules.config import logger
-from modules.draw import LuckyDraw
 from modules.owlto import Owlto
 from modules.utils import create_csv, get_rand_amount, random_sleep, sleep
 from modules.wallet import Wallet
@@ -90,9 +90,16 @@ def check_in_owlto_action(key, index, total):
 
 def lucky_draw_action(key, index, total, proxies=None):
     proxy = random.choice(proxies) if settings.USE_PROXY and proxies else None
-    draw = LuckyDraw(key, f"[{index}/{total}]", proxy)
+    draw = Bitlayer(key, f"[{index}/{total}]", proxy)
 
     return draw.get_draw()
+
+
+def claim_daily_tasks(key, index, total, proxies=None):
+    proxy = random.choice(proxies) if settings.USE_PROXY and proxies else None
+    bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+
+    return bitlayer.claim_daily_tasks()
 
 
 def swap_btc_action(key, index, total, to_token):
@@ -107,7 +114,7 @@ def avalon_depoit(key, index, total):
     avalon = Avalon(key, f"[{index}/{total}]")
     amount = get_rand_amount(*settings.DEPOSIT_VALUE)
 
-    avalon.deposit_native_token(amount)
+    return avalon.deposit_native_token(amount)
 
 
 def main():
@@ -124,6 +131,7 @@ def main():
         choices=[
             "Parse Accounts",
             "Lucky Draw",
+            "Claim Daily Tasks",
             wrap_btc_option,
             "Unwrap WBTC",
             "Swap BTC > WBTC > BTC",
@@ -137,6 +145,12 @@ def main():
     if action == "Parse Accounts":
         parse_accounts(keys)
 
+    elif action == "Lucky Draw":
+        process_wallets(keys, lucky_draw_action, proxies=proxies)
+
+    elif action == "Claim Daily Tasks":
+        process_wallets(keys, claim_daily_tasks, proxies=proxies)
+
     elif action == wrap_btc_option:
         process_wallets(keys, wrap_btc_action)
 
@@ -145,9 +159,6 @@ def main():
 
     elif action == "Check in with Owlto":
         process_wallets(keys, check_in_owlto_action)
-
-    elif action == "Lucky Draw":
-        process_wallets(keys, lucky_draw_action, proxies=proxies)
 
     elif action == "Swap BTC > WBTC > BTC":
         process_wallets(keys, swap_btc_action, to_token="WBTC")
