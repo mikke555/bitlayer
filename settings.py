@@ -15,5 +15,5 @@ WRAP_TX_COUNT = [5, 10]
 SWAP_VALUES = [0.000008, 0.000023]  # $0.5 - $1.5
 SWAP_BACK_VALUES = [95, 99]  # e.g. 95-99%
 
-# Avalon module
+# Avalon & LayerBank
 DEPOSIT_VALUE = [0.0000001, 0.000001]

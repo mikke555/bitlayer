@@ -25,7 +25,7 @@ def random_sleep(min_time, max_time):
     time.sleep(duration)
 
 
-def sleep(from_sleep, to_sleep, label="Sleeping"):
+def sleep(from_sleep, to_sleep, label="Sleep until next account", new_line=True):
     x = random.randint(from_sleep, to_sleep)
     desc = datetime.now().strftime("%H:%M:%S")
 
@@ -33,3 +33,6 @@ def sleep(from_sleep, to_sleep, label="Sleeping"):
         range(x), desc=desc, bar_format=f"{{desc}} | {label} {{n_fmt}}/{{total_fmt}}"
     ):
         time.sleep(1)
+
+    if new_line:
+        print()  # new line break

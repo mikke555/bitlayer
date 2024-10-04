@@ -5,7 +5,7 @@ import random
 from rich import print_json
 
 import settings
-from modules.browser import Browser
+from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
 from modules.utils import random_sleep, sleep
 from modules.wallet import Wallet
@@ -15,7 +15,10 @@ class Bitlayer(Wallet):
     def __init__(self, private_key, counter, proxy=None):
         super().__init__(private_key, counter)
         self.module_str += "Bitlayer |"
-        self.browser = Browser(self.module_str, proxy)
+
+        self.client = BitlayerApiClient(
+            self.module_str, private_key, self.address, proxy
+        )
 
         contract_abi = [
             {
@@ -31,66 +34,51 @@ class Bitlayer(Wallet):
 
     def claim_daily_tasks(self):
         try:
-            # authorize and get session cookie
-            signature = self.browser.sign_message("BITLAYER", self.private_key)
-            self.browser.login(signature, self.address)
-            random_sleep(1, 5)
-
-            # get user stats
-            _, _, daily_tasks, ongoing_task = self.browser.get_user_stats()
+            # Get user stats
+            _, _, daily_tasks, ongoing_task = self.client.get_user_stats()
             random.shuffle(daily_tasks)
 
-            # claim ongoing rewards for past transactions
-            self.browser.claim_tx_rewards(
-                ongoing_task["taskId"], "ongoing rewards", ongoing_task["rewardPoints"]
-            )
-            random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+            # Claim ongoing rewards for past transactions
+            if ongoing_task and ongoing_task.get("rewardPoints") > 0:
+                self.client.claim_tx_rewards(
+                    ongoing_task["taskId"],
+                    "ongoing rewards",
+                    ongoing_task["rewardPoints"],
+                )
+                random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
-            # claim daily tasks
+            # Claim the daily tasks
             for task in daily_tasks:
+                if task["isCompleted"]:
+                    msg = f"{self.module_str} {task['mainTitle']} already completed"
+                    logger.debug(msg)
+                    continue
+
+                self.client.start_task(task["taskId"], task["mainTitle"])
+
                 if task["taskId"] == 1:
-                    if task["isCompleted"]:
-                        logger.debug(
-                            f"{self.module_str} {task['mainTitle']} already completed"
-                        )
-                        continue
-
-                    # # start daily browse task
-                    self.browser.start_task(1, task["mainTitle"])
-                    checked = self.browser.wait_for_daily_browse_status()
-
-                    # check for status and claim the task
+                    checked = self.client.wait_for_daily_browse_status()
                     if checked:
-                        self.browser.claim_task(
-                            1, task["mainTitle"], task["rewardPoints"]
+                        self.client.claim_task(
+                            task["taskId"], task["mainTitle"], task["rewardPoints"]
                         )
-                        random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+                elif task["taskId"] == 2:
+                    self.client.claim_task(
+                        task["taskId"], task["mainTitle"], task["rewardPoints"]
+                    )
 
-                if task["taskId"] == 2:
-                    if task["isCompleted"]:
-                        logger.debug(
-                            f"{self.module_str} {task['mainTitle']} already completed"
-                        )
-                        continue
-
-                    # start daily share
-                    self.browser.start_task(2, task["mainTitle"])
-                    random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
-                    # claim daily share
-                    self.browser.claim_task(2, task["mainTitle"], task["rewardPoints"])
-                    random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+                random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
         except Exception as error:
             logger.error(f"Failed to claim the task: {error}")
 
         finally:
-            total_points, level, daily_tasks, _ = self.browser.get_user_stats()
+            total_points, level, daily_tasks, _ = self.client.get_user_stats()
             self.create_report(self.address, self.tx_count, total_points, level)
-
             return True
 
     def create_report(self, address, tx_count, total_points, level):
-        filename = "wallets.csv"
+        filename = "reports/wallets.csv"
         file_exists = os.path.isfile(filename)
 
         with open(filename, "a", encoding="utf-8", newline="") as file:
@@ -114,21 +102,21 @@ class Bitlayer(Wallet):
     def get_draw(self):
         """Main function for getting the lottery draw"""
         try:
-            # authorize and get session cookie
-            signature = self.browser.sign_message("BITLAYER", self.private_key)
-            self.browser.login(signature, self.address)
-            random_sleep(1, 5)
-
             # get lottery info and send txn
-            num_draws = self.browser.get_lottery_info()
+            num_draws = self.client.get_lottery_info()
 
             if num_draws > 0:
-                lottery_id, expire_time = self.browser.get_lottery_id()
+                lottery_id, expire_time = self.client.get_lottery_id()
                 tx_status = self.draw(lottery_id, expire_time)
 
                 if tx_status:
-                    sleep(20, 20, label=f"{self.module_str} Checking draw results in")
-                    result = self.browser.get_draw_result(lottery_id)
+                    sleep(
+                        20,
+                        20,
+                        label=f"{self.module_str} Checking draw results in",
+                        new_line=False,
+                    )
+                    result = self.client.get_draw_result(lottery_id)
                     return self.handle_draw_result(result)
 
         except Exception as error:
