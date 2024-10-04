@@ -51,7 +51,7 @@ class Bitlayer(Wallet):
             for task in daily_tasks:
                 if task["isCompleted"]:
                     msg = f"{self.module_str} {task['mainTitle']} already completed"
-                    logger.debug(msg)
+                    logger.warning(msg)
                     continue
 
                 self.client.start_task(task["taskId"], task["mainTitle"])
@@ -77,6 +77,7 @@ class Bitlayer(Wallet):
             csv_headers = ["Wallet", "TX count", "Points", "Level"]
             csv_data = [[self.address, self.tx_count, total_points, level]]
             create_csv("reports/wallets.csv", csv_headers, csv_data)
+            print() # new line break
 
             return True
 

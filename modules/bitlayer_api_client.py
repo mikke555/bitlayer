@@ -72,7 +72,7 @@ class BitlayerApiClient:
         tasks_of_interest = [task for task in daily_tasks if task["taskId"] in [1, 2]]
         ongoing_task = data["tasks"]["ongoingTask"]
 
-        logger.info(f"{self.module_str} Total points: {total_points}, lvl {level}")
+        logger.debug(f"{self.module_str} Total points: {total_points}, lvl: {level}")
         return total_points, level, tasks_of_interest, ongoing_task
 
     def start_task(self, task_id, task_name):

@@ -19,10 +19,14 @@ def create_csv(path, headers, data):
     if not os.path.exists(path):
         logger.success(f"{path} created \n")
 
+    file_exists = os.path.exists(path)
+
     with open(path, "a", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
 
-        writer.writerow(headers)
+        if not file_exists or os.stat(path).st_size == 0:
+            writer.writerow(headers)
+
         writer.writerows(data)
 
 
