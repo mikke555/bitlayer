@@ -25,6 +25,6 @@ pip install -r requirements.txt
 * `SWAP_VALUES` 
 * `SWAP_BACK_VALUES`
 
-### # Avalon & LayerBank
+### Avalon & LayerBank
 
 * `DEPOSIT_VALUE` 
