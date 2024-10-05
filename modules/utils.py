@@ -13,19 +13,18 @@ from modules.config import logger
 def create_csv(path, headers, data):
     directory = os.path.dirname(path)
 
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)
-
-    if not os.path.exists(path):
-        logger.success(f"{path} created \n")
-
+    dir_exists = os.path.exists(directory)
     file_exists = os.path.exists(path)
+
+    if not dir_exists:
+        os.makedirs(directory, exist_ok=True)
 
     with open(path, "a", encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
 
-        if not file_exists or os.stat(path).st_size == 0:
+        if not file_exists:
             writer.writerow(headers)
+            logger.success(f"{path} created")
 
         writer.writerows(data)
 
