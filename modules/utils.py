@@ -10,7 +10,7 @@ from web3 import Web3
 from modules.config import logger
 
 
-def create_csv(path, headers, data):
+def create_csv(path, mode, headers, data):
     directory = os.path.dirname(path)
 
     dir_exists = os.path.exists(directory)
@@ -19,7 +19,7 @@ def create_csv(path, headers, data):
     if not dir_exists:
         os.makedirs(directory, exist_ok=True)
 
-    with open(path, "a", encoding="utf-8", newline="") as file:
+    with open(path, mode, encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
 
         if not file_exists:

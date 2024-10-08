@@ -62,6 +62,7 @@ class Bitlayer(Wallet):
                         self.client.claim_task(
                             task["taskId"], task["mainTitle"], task["rewardPoints"]
                         )
+
                 elif task["taskId"] == 2:
                     self.client.claim_task(
                         task["taskId"], task["mainTitle"], task["rewardPoints"]
@@ -76,7 +77,7 @@ class Bitlayer(Wallet):
             total_points, level, daily_tasks, _ = self.client.get_user_stats()
             csv_headers = ["Wallet", "TX count", "Points", "Level"]
             csv_data = [[self.address, self.tx_count, total_points, level]]
-            create_csv("reports/wallets.csv", csv_headers, csv_data)
+            create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
             print() # new line break
 
             return True

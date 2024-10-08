@@ -84,10 +84,6 @@ class BitlayerApiClient:
         logger.info(f"{self.module_str} Started {task_name}")
 
     def claim_tx_rewards(self, task_id, task_name, pp):
-        if not pp:
-            logger.warning(f"{self.module_str} No rewards to claim or already claimed")
-            return
-
         self.start_task(task_id, task_name)
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 

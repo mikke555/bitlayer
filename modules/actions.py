@@ -76,7 +76,7 @@ class ActionHandler:
             rich_print(text)
             wallets_data.append((index, wallet.address, wallet.tx_count))
 
-        create_csv("reports/tx_count.csv", ["№", "Wallet", "TX count"], wallets_data)
+        create_csv("reports/tx_count.csv", "w",["№", "Wallet", "TX count"], wallets_data)
         
 
     def lucky_draw(self, key, index, total):

@@ -100,7 +100,7 @@ class Wallet:
                 raise Exception(f"{tx_label} | Tx Failed \n")
 
         except Exception as error:
-            logger.error(f"Tx failed: {error} \n")
+            logger.error(f"{tx_label} | {error} \n")
             if retry < settings.RETRY_COUNT:
                 random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
                 return self.send_tx(tx, tx_label, retry=retry + 1)

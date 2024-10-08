@@ -32,7 +32,7 @@ class Wrapper(Wallet):
         balance, decimals, symbol = self.get_token(WBTC)
 
         if not balance:
-            logger.warning(f"{self.module_str} no {symbol} balance to withdraw")
+            logger.warning(f"{self.module_str} no {symbol} balance to withdraw \n")
             return
 
         contract_tx = self.contract.functions.withdraw(balance).build_transaction(
