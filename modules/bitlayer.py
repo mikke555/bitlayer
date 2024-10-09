@@ -1,13 +1,10 @@
-import csv
-import os
 import random
 
 from rich import print_json
 
-import settings
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
-from modules.utils import create_csv, random_sleep, sleep
+from modules.utils import create_csv, sleep
 from modules.wallet import Wallet
 
 
@@ -32,54 +29,70 @@ class Bitlayer(Wallet):
         ]
         self.contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
 
+    def dump_userdata_to_csv(self):
+            user_data = self.client.get_user_stats()
+            csv_headers = ["Wallet", "TX count", "Points", "Level"]
+            csv_data = [[self.address, self.tx_count, user_data["profile"]["totalPoints"], user_data["profile"]["level"]]]
+            create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
+
+    def claim_txn_tasks(self):
+        try:
+            advanced_tasks = self.client.get_user_stats()["tasks"]["advanceTasks"]
+            txn_tasks = [task for task in advanced_tasks if "Transaction more" in task["title"]]
+
+            for task in txn_tasks:
+                if task["isCompleted"]:
+                    msg = f"{self.module_str} {task['title'].strip()} already completed"
+                    logger.warning(msg)
+                    continue
+
+                if self.tx_count >= task["targetCount"]:
+                    self.client.start(task)
+                    self.client.verify(task)
+                    self.client.claim(task)
+                
+        except Exception as error:
+            logger.error(error)
+
+        finally:
+            self.dump_userdata_to_csv()
+            return True
+
     def claim_daily_tasks(self):
         try:
-            # Get user stats
-            _, _, daily_tasks, ongoing_task = self.client.get_user_stats()
+            user_data = self.client.get_user_stats()
+
+            # Claim ongoing Racer Center rewards for past transactions
+            ongoing_task = user_data["tasks"]["ongoingTask"]
+            if ongoing_task.get("rewardPoints") > 0:
+                self.client.start(ongoing_task)
+                self.client.verify(ongoing_task)
+
+            # Exclude taskId 3 (Daily Meson Bridge)
+            daily_tasks = [task for task in user_data["tasks"]["dailyTasks"] if task["taskId"] in [1, 2]]
             random.shuffle(daily_tasks)
 
-            # Claim ongoing rewards for past transactions
-            if ongoing_task and ongoing_task.get("rewardPoints") > 0:
-                self.client.claim_tx_rewards(
-                    ongoing_task["taskId"],
-                    "ongoing rewards",
-                    ongoing_task["rewardPoints"],
-                )
-                random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
-
-            # Claim the daily tasks
+            # Claim Daily Tasks
             for task in daily_tasks:
                 if task["isCompleted"]:
                     msg = f"{self.module_str} {task['mainTitle']} already completed"
                     logger.warning(msg)
                     continue
 
-                self.client.start_task(task["taskId"], task["mainTitle"])
+                self.client.start(task)
 
                 if task["taskId"] == 1:
                     checked = self.client.wait_for_daily_browse_status()
                     if checked:
-                        self.client.claim_task(
-                            task["taskId"], task["mainTitle"], task["rewardPoints"]
-                        )
-
-                elif task["taskId"] == 2:
-                    self.client.claim_task(
-                        task["taskId"], task["mainTitle"], task["rewardPoints"]
-                    )
-
-                random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+                        self.client.claim(task)
+                else:
+                    self.client.claim(task)
 
         except Exception as error:
-            logger.error(f"Failed to claim the task: {error}")
+            logger.error(error)
 
         finally:
-            total_points, level, daily_tasks, _ = self.client.get_user_stats()
-            csv_headers = ["Wallet", "TX count", "Points", "Level"]
-            csv_data = [[self.address, self.tx_count, total_points, level]]
-            create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
-            print() # new line break
-
+            self.dump_userdata_to_csv()
             return True
 
     def draw(self, lottery_id, expire_time):

@@ -68,31 +68,31 @@ class BitlayerApiClient:
 
         total_points = data["profile"]["totalPoints"]
         level = data["profile"]["level"]
-        daily_tasks = data["tasks"]["dailyTasks"]
-        tasks_of_interest = [task for task in daily_tasks if task["taskId"] in [1, 2]]
-        ongoing_task = data["tasks"]["ongoingTask"]
+        txn = data["profile"]["txn"]
 
-        logger.debug(f"{self.module_str} Total points: {total_points}, lvl: {level}")
-        return total_points, level, tasks_of_interest, ongoing_task
+        logger.debug(f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}")
+        return data
 
-    def start_task(self, task_id, task_name):
-        data = self.post("/me/task/start", json={"taskId": task_id})
+    def start(self, task):
+        id, title = task['taskId'], task.get('title', 'Racer Center rewards')
+        data = self.post("/me/task/start", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
-            raise Exception(f"Failed to start {task_name}: {data}")
+            raise Exception(f"Failed to start {title}: {data}")
 
-        logger.info(f"{self.module_str} Started {task_name}")
-
-    def claim_tx_rewards(self, task_id, task_name, pp):
-        self.start_task(task_id, task_name)
+        logger.info(f"{self.module_str} Started {title.strip()}")
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
-        data = self.post("/me/task/verify", json={"taskId": task_id})
+    def verify(self, task):
+        id, title, pts = task['taskId'], task.get('title', 'Racer Center rewards'), task["rewardPoints"]
+        data = self.post("/me/task/verify", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
-            raise Exception(f"Failed to claim task {task_id}: {data}")
+            raise Exception(f"Failed to claim task {id}: {data}")
 
-        logger.success(f"{self.module_str} Claimed {pp} points in {task_name}")
+        if title == "Racer Center rewards":
+            logger.success(f"{self.module_str} Claimed {pts} points for {title}")
+        random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def wait_for_daily_browse_status(self):
         data = self.post(
@@ -110,13 +110,15 @@ class BitlayerApiClient:
             return self.wait_for_daily_browse_status()  # Recursive call
         return checked
 
-    def claim_task(self, task_id, task_name, pp):
-        data = self.post("/me/task/claim", json={"taskId": task_id, "taskType": 1})
+    def claim(self, task):
+        id, type, title, pts = task["taskId"], task["taskType"], task["title"], task["rewardPoints"]
+        data = self.post("/me/task/claim", json={"taskId": id, "taskType": type})
 
         if not data or data.get("message") != "ok":
-            raise Exception(f"Failed to claim task {task_id}: {data}")
+            raise Exception(f"Failed to claim task {id}: {data}")
 
-        logger.success(f"{self.module_str} Claimed {pp} points for {task_name}")
+        logger.success(f"{self.module_str} Claimed {pts} points for {title.strip()}")
+        random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def get_lottery_info(self):
         """Get lottery eligibility"""

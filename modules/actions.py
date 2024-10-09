@@ -33,6 +33,7 @@ class ActionHandler:
             "Parse Accounts": self.parse_accounts,
             "Lucky Draw": self.lucky_draw,
             "Claim Daily Tasks": self.claim_daily_tasks,
+            'Claim "Transact more than X times"': self.claim_advanced_tasks,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
             "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
@@ -78,7 +79,6 @@ class ActionHandler:
 
         create_csv("reports/tx_count.csv", "w",["№", "Wallet", "TX count"], wallets_data)
         
-
     def lucky_draw(self, key, index, total):
         proxy = self.get_proxy(index)
         draw = Bitlayer(key, f"[{index}/{total}]", proxy)
@@ -88,6 +88,11 @@ class ActionHandler:
         proxy = self.get_proxy(index)
         bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
         return bitlayer.claim_daily_tasks()
+    
+    def claim_advanced_tasks(self, key, index, total):
+        proxy = self.get_proxy(index)
+        bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+        return bitlayer.claim_txn_tasks()
 
     def wrap_btc(self, key, index, total):
         wrapper = Wrapper(key, f"[{index}/{total}]")

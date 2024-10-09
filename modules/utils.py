@@ -24,7 +24,7 @@ def create_csv(path, mode, headers, data):
 
         if not file_exists:
             writer.writerow(headers)
-            logger.success(f"{path} created")
+            logger.success(f"{path} created \n")
 
         writer.writerows(data)
 
