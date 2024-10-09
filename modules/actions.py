@@ -64,10 +64,15 @@ class ActionHandler:
         for index, key in enumerate(self.keys, start=1):
             wallet = Wallet(key, None)
 
-            if wallet.tx_count >= 50:
+            if wallet.tx_count >= 100:
                 text = Text(
                     f"{index} {wallet.address}: {wallet.tx_count} transaction(s)",
                     style="green",
+                )
+            elif wallet.tx_count >= 50:
+                text = Text(
+                    f"{index} {wallet.address}: {wallet.tx_count} transaction(s)",
+                    style="yellow",
                 )
             else:
                 text = Text(
