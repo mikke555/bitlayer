@@ -56,6 +56,7 @@ class Bitlayer(Wallet):
 
         finally:
             self.dump_userdata_to_csv()
+            print() # line break
             return True
 
     def claim_daily_tasks(self):
@@ -93,6 +94,7 @@ class Bitlayer(Wallet):
 
         finally:
             self.dump_userdata_to_csv()
+            print() # line break
             return True
 
     def draw(self, lottery_id, expire_time):
