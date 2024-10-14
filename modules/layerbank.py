@@ -1,4 +1,5 @@
 from modules.config import LAYERBANK
+from modules.utils import check_min_balance
 from modules.wallet import Wallet
 
 
@@ -19,6 +20,7 @@ class LayerBank(Wallet):
 
         self.contract = self.get_contract(LAYERBANK, abi=contract_abi)
 
+    @check_min_balance
     def supply(self, amount):
         lToken = self.to_checksum("0x1471b4FAc13d42F3447fBA145bdfE95C6e7e7540")
 
@@ -28,5 +30,5 @@ class LayerBank(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} deposit {amount / 10**18:.10f} BTC [{self.tx_count}]",
+            tx_label=f"{self.module_str} deposit {amount / 10**18:.8f} BTC [{self.tx_count}]",
         )

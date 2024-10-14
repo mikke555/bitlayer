@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from modules.config import OWLTO
+from modules.utils import check_min_balance
 from modules.wallet import Wallet
 
 
@@ -17,6 +18,7 @@ class Owlto(Wallet):
         ]
         self.contract = self.get_contract(OWLTO, abi=contract_abi)
 
+    @check_min_balance
     def check_in(self):
         date = int(datetime.now().strftime("%Y%m%d"))
 

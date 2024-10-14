@@ -7,7 +7,23 @@ from datetime import datetime
 from tqdm import tqdm
 from web3 import Web3
 
+import settings
 from modules.config import logger
+
+
+def check_min_balance(func):
+    def wrapper(self, *args, **kwargs):
+        balance = self.get_balance()
+        min_balance = self.web3.to_wei(settings.MIN_BTC_BALANCE, "ether")
+
+        if balance < min_balance:
+            logger.warning(
+                f"{self.module_str} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, skipping"
+            )
+            return
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def create_csv(path, mode, headers, data):
@@ -24,7 +40,7 @@ def create_csv(path, mode, headers, data):
 
         if not file_exists:
             writer.writerow(headers)
-            logger.success(f"{path} created \n")
+            logger.success(f"{path} created")
 
         writer.writerows(data)
 

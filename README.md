@@ -14,6 +14,7 @@ pip install -r requirements.txt
 * `RETRY_COUNT` 
 * `SLEEP_BETWEEN_WALLETS`
 * `SLEEP_BETWEEN_ACTIONS`
+* `MIN_BTC_BALANCE`
 
 ### Wrap BTC module
 

@@ -82,8 +82,10 @@ class ActionHandler:
             rich_print(text)
             wallets_data.append((index, wallet.address, wallet.tx_count))
 
-        create_csv("reports/tx_count.csv", "w",["№", "Wallet", "TX count"], wallets_data)
-        
+        create_csv(
+            "reports/tx_count.csv", "w", ["№", "Wallet", "TX count"], wallets_data
+        )
+
     def lucky_draw(self, key, index, total):
         proxy = self.get_proxy(index)
         draw = Bitlayer(key, f"[{index}/{total}]", proxy)
@@ -93,7 +95,7 @@ class ActionHandler:
         proxy = self.get_proxy(index)
         bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
         return bitlayer.claim_daily_tasks()
-    
+
     def claim_advanced_tasks(self, key, index, total):
         proxy = self.get_proxy(index)
         bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
@@ -101,6 +103,17 @@ class ActionHandler:
 
     def wrap_btc(self, key, index, total):
         wrapper = Wrapper(key, f"[{index}/{total}]")
+
+        # Check for sufficient balance
+        balance = wrapper.get_balance()
+        min_balance = wrapper.web3.to_wei(settings.MIN_BTC_BALANCE, "ether")
+
+        if balance < min_balance:
+            logger.warning(
+                f"{wrapper.module_str} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, will attempt to redeem BTC instead"
+            )
+            return wrapper.withdraw()
+
         tx_count = random.randint(*settings.WRAP_TX_COUNT)
 
         for _ in range(tx_count):

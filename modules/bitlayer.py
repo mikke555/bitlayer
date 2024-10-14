@@ -4,7 +4,7 @@ from rich import print_json
 
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
-from modules.utils import create_csv, sleep
+from modules.utils import check_min_balance, create_csv, sleep
 from modules.wallet import Wallet
 
 
@@ -30,15 +30,24 @@ class Bitlayer(Wallet):
         self.contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
 
     def dump_userdata_to_csv(self):
-            user_data = self.client.get_user_stats()
-            csv_headers = ["Wallet", "TX count", "Points", "Level"]
-            csv_data = [[self.address, self.tx_count, user_data["profile"]["totalPoints"], user_data["profile"]["level"]]]
-            create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
+        user_data = self.client.get_user_stats()
+        csv_headers = ["Wallet", "Txn count", "Points", "Level"]
+        csv_data = [
+            [
+                self.address,
+                self.tx_count,
+                user_data["profile"]["totalPoints"],
+                user_data["profile"]["level"],
+            ]
+        ]
+        create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
 
     def claim_txn_tasks(self):
         try:
             advanced_tasks = self.client.get_user_stats()["tasks"]["advanceTasks"]
-            txn_tasks = [task for task in advanced_tasks if "Transaction more" in task["title"]]
+            txn_tasks = [
+                task for task in advanced_tasks if "Transaction more" in task["title"]
+            ]
 
             for task in txn_tasks:
                 if task["isCompleted"]:
@@ -50,13 +59,13 @@ class Bitlayer(Wallet):
                     self.client.start(task)
                     self.client.verify(task)
                     self.client.claim(task)
-                
+
         except Exception as error:
             logger.error(error)
 
         finally:
             self.dump_userdata_to_csv()
-            print() # line break
+            print()  # line break
             return True
 
     def claim_daily_tasks(self):
@@ -70,7 +79,11 @@ class Bitlayer(Wallet):
                 self.client.verify(ongoing_task)
 
             # Exclude taskId 3 (Daily Meson Bridge)
-            daily_tasks = [task for task in user_data["tasks"]["dailyTasks"] if task["taskId"] in [1, 2]]
+            daily_tasks = [
+                task
+                for task in user_data["tasks"]["dailyTasks"]
+                if task["taskId"] in [1, 2]
+            ]
             random.shuffle(daily_tasks)
 
             # Claim Daily Tasks
@@ -94,9 +107,10 @@ class Bitlayer(Wallet):
 
         finally:
             self.dump_userdata_to_csv()
-            print() # line break
+            print()  # line break
             return True
 
+    @check_min_balance
     def draw(self, lottery_id, expire_time):
         """Build and send the transaction for the lottery draw."""
         contract_tx = self.contract.functions.lotteryReveal(

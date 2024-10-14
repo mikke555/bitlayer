@@ -25,7 +25,7 @@ class Wrapper(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} wrap {amount:.10f} BTC [{self.tx_count}]",
+            tx_label=f"{self.module_str} wrap {amount:.8f} BTC [{self.tx_count}]",
         )
 
     def withdraw(self):

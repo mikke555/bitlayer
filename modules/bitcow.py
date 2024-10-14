@@ -1,6 +1,6 @@
 import settings
 from modules.config import BITCOW, BITCOW_ABI, BITUSD, INFINITE_AMOUNT, WBTC, logger
-from modules.utils import sleep
+from modules.utils import check_min_balance, sleep
 from modules.wallet import Wallet
 
 
@@ -10,6 +10,7 @@ class BitCow(Wallet):
         self.module_str += "BitCow |"
         self.contract = self.get_contract(BITCOW, abi=BITCOW_ABI)
 
+    @check_min_balance
     def swap(self, to_token, amount, percentage):
         if to_token == "BITUSD":
             tx_status = self.swap_btc_to_bitusd(amount)
@@ -36,7 +37,7 @@ class BitCow(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} swap {amount / 10**18:.10f} BTC > BITUSD [{self.tx_count}]",
+            tx_label=f"{self.module_str} swap {amount / 10**18:.8f} BTC > BITUSD [{self.tx_count}]",
         )
 
     def swap_bitusd_to_btc(self, percentage):
@@ -49,7 +50,7 @@ class BitCow(Wallet):
 
         amount = int((percentage / 100) * balance)
 
-        tx_label = f"approve {amount / 10 ** decimals:.10f} {symbol}"
+        tx_label = f"approve {amount / 10 ** decimals:.8f} {symbol}"
         self.approve(
             BITUSD,
             self.contract.address,
@@ -66,7 +67,7 @@ class BitCow(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} swap {amount / 10**decimals:.10f} BTIUSD > WBTC [{self.tx_count}]",
+            tx_label=f"{self.module_str} swap {amount / 10**decimals:.8f} BTIUSD > WBTC [{self.tx_count}]",
         )
 
     def swap_btc_to_wbtc(self, amount):
@@ -77,7 +78,7 @@ class BitCow(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} swap {amount / 10**18:.10f} BTC > WBTC [{self.tx_count}]",
+            tx_label=f"{self.module_str} swap {amount / 10**18:.8f} BTC > WBTC [{self.tx_count}]",
         )
 
     def swap_wbtc_to_btc(self, percentage):
@@ -90,7 +91,7 @@ class BitCow(Wallet):
 
         amount = int((percentage / 100) * balance)
 
-        tx_label = f"approve {amount / 10 ** decimals:.10f} {symbol}"
+        tx_label = f"approve {amount / 10 ** decimals:.8f} {symbol}"
         self.approve(
             WBTC,
             self.contract.address,
@@ -104,5 +105,5 @@ class BitCow(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} swap {amount / 10**decimals:.10f} {symbol} > BTC [{self.tx_count}]",
+            tx_label=f"{self.module_str} swap {amount / 10**decimals:.8f} {symbol} > BTC [{self.tx_count}]",
         )

@@ -70,11 +70,13 @@ class BitlayerApiClient:
         level = data["profile"]["level"]
         txn = data["profile"]["txn"]
 
-        logger.debug(f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}")
+        logger.debug(
+            f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}"
+        )
         return data
 
     def start(self, task):
-        id, title = task['taskId'], task.get('title', 'Racer Center rewards')
+        id, title = task["taskId"], task.get("title", "Racer Center rewards")
         data = self.post("/me/task/start", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
@@ -84,7 +86,11 @@ class BitlayerApiClient:
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def verify(self, task):
-        id, title, pts = task['taskId'], task.get('title', 'Racer Center rewards'), task["rewardPoints"]
+        id, title, pts = (
+            task["taskId"],
+            task.get("title", "Racer Center rewards"),
+            task["rewardPoints"],
+        )
         data = self.post("/me/task/verify", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
@@ -111,7 +117,12 @@ class BitlayerApiClient:
         return checked
 
     def claim(self, task):
-        id, type, title, pts = task["taskId"], task["taskType"], task["title"], task["rewardPoints"]
+        id, type, title, pts = (
+            task["taskId"],
+            task["taskType"],
+            task["title"],
+            task["rewardPoints"],
+        )
         data = self.post("/me/task/claim", json={"taskId": id, "taskType": type})
 
         if not data or data.get("message") != "ok":
@@ -131,7 +142,7 @@ class BitlayerApiClient:
         if chances > 0:
             logger.debug(f"{self.module_str} You have {chances} Lucky Draw(s)")
         else:
-            logger.warning(f"{self.module_str} You have {chances} Lucky Draw(s)")
+            logger.warning(f"{self.module_str} You have {chances} Lucky Draw(s) \n")
 
         return chances
 

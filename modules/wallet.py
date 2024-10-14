@@ -122,7 +122,7 @@ class Wallet:
 
         if allowance >= balance:
             logger.debug(
-                f"{tx_label} | {balance / 10 ** decimals:.10f} {symbol} already approved"
+                f"{tx_label} | {balance / 10 ** decimals:.8f} {symbol} already approved"
             )
             return
 
