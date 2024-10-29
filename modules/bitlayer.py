@@ -145,3 +145,5 @@ class Bitlayer(Wallet):
         logger.success(
             f"{self.module_str} {item_name.title()} from {item_star}-Star Collection \n"
         )
+
+        return True
