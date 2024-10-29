@@ -19,9 +19,14 @@ def load_keys(file_path):
 def load_proxies(file_path):
     with open(file_path) as file:
         proxies = [f"http://{row.strip()}" for row in file if row.strip()]
+
     if settings.USE_PROXY and not proxies:
         logger.warning("Proxies are enabled but proxies.txt is empty")
         exit(0)
+
+    if settings.SHUFFLE_WALLETS:
+        random.shuffle(proxies)
+
     return proxies
 
 

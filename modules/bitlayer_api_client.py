@@ -68,10 +68,11 @@ class BitlayerApiClient:
 
         total_points = data["profile"]["totalPoints"]
         level = data["profile"]["level"]
+        rank = data["meInfo"]["rank"]
         txn = data["profile"]["txn"]
 
         logger.debug(
-            f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}"
+            f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}, Rank: {rank}"
         )
         return data
 

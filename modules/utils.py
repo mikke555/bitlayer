@@ -28,9 +28,7 @@ def check_min_balance(func):
 
 def create_csv(path, mode, headers, data):
     directory = os.path.dirname(path)
-
     dir_exists = os.path.exists(directory)
-    file_exists = os.path.exists(path)
 
     if not dir_exists:
         os.makedirs(directory, exist_ok=True)
@@ -38,7 +36,7 @@ def create_csv(path, mode, headers, data):
     with open(path, mode, encoding="utf-8", newline="") as file:
         writer = csv.writer(file)
 
-        if not file_exists:
+        if file.tell() == 0:
             writer.writerow(headers)
             logger.success(f"{path} created")
 
