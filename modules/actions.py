@@ -31,7 +31,7 @@ class ActionHandler:
     def get_action_map(self):
         return {
             "Parse Accounts": self.parse_accounts,
-            "Lucky Draw": self.lucky_draw,
+            "Free Draw": self.lucky_draw,
             "Claim Daily Tasks": self.claim_daily_tasks,
             'Claim "Transact more than X times"': self.claim_advanced_tasks,
             self.wrap_btc_option: self.wrap_btc,

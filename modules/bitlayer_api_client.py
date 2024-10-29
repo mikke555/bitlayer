@@ -60,7 +60,7 @@ class BitlayerApiClient:
         return self._make_request("POST", endpoint, **kwargs)
 
     # API requests
-    def get_user_stats(self):
+    def get_user_data(self):
         data = self.get("/me?_data=routes%2F%28%24lang%29._app%2B%2Fme%2B%2F_index")
 
         if not data:
@@ -132,33 +132,17 @@ class BitlayerApiClient:
         logger.success(f"{self.module_str} Claimed {pts} points for {title.strip()}")
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
-    def get_lottery_info(self):
-        """Get lottery eligibility"""
-        data = self.get("/api/draw/info")
+    def get_draw_id(self):
+        data = self.get("/api/draw/car?drawType=2&drawTimes=1")
 
         if not data:
-            raise Exception(f"Failed to fetch lottery info: {data}")
+            raise Exception(f"Failed to get draw id: {data}")
 
-        chances = data.get("chances", 0)
-        if chances > 0:
-            logger.debug(f"{self.module_str} You have {chances} Lucky Draw(s)")
-        else:
-            logger.warning(f"{self.module_str} You have {chances} Lucky Draw(s) \n")
+        return data["drawId"]
 
-        return chances
-
-    def get_lottery_id(self):
-        """Fetch lottery_id and expire_time required by lotteryReveal contract function"""
-        data = self.get("/api/draw/pre")
-
-        if not data:
-            raise Exception(f"Failed to fetch lottery id: {data}")
-
-        return data["lottery_id"], int(data["expire_time"])
-
-    def get_draw_result(self, lottery_id):
+    def get_draw_result(self, draw_id):
         """Fetch the result of a draw"""
-        data = self.get(f"/api/draw/reply/{lottery_id}")
+        data = self.get(f"/api/draw/result/{draw_id}")
 
         if not data:
             raise Exception(f"Failed to fetch draw result: {data}")

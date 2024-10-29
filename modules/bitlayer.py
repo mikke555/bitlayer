@@ -20,17 +20,14 @@ class Bitlayer(Wallet):
         contract_abi = [
             {
                 "type": "function",
-                "name": "lotteryReveal",
-                "inputs": [
-                    {"name": "lotteryId_", "type": "string"},
-                    {"name": "expiredTime_", "type": "uint256"},
-                ],
-            }
+                "name": "payForFree",
+                "inputs": [{"name": "_drawId", "type": "string"}],
+            },
         ]
         self.contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
 
     def dump_userdata_to_csv(self):
-        user_data = self.client.get_user_stats()
+        user_data = self.client.get_user_data()
         csv_headers = ["Wallet", "Txn count", "Points", "Level", "Rank"]
         csv_data = [
             [
@@ -45,7 +42,7 @@ class Bitlayer(Wallet):
 
     def claim_txn_tasks(self):
         try:
-            advanced_tasks = self.client.get_user_stats()["tasks"]["advanceTasks"]
+            advanced_tasks = self.client.get_user_data()["tasks"]["advanceTasks"]
             txn_tasks = [
                 task for task in advanced_tasks if "Transaction more" in task["title"]
             ]
@@ -71,7 +68,7 @@ class Bitlayer(Wallet):
 
     def claim_daily_tasks(self):
         try:
-            user_data = self.client.get_user_stats()
+            user_data = self.client.get_user_data()
 
             # Claim ongoing Racer Center rewards for past transactions
             ongoing_task = user_data["tasks"]["ongoingTask"]
@@ -112,50 +109,39 @@ class Bitlayer(Wallet):
             return True
 
     @check_min_balance
-    def draw(self, lottery_id, expire_time):
-        """Build and send the transaction for the lottery draw."""
-        contract_tx = self.contract.functions.lotteryReveal(
-            lottery_id, expire_time
-        ).build_transaction(self.get_tx_data())
+    def draw(self, draw_id):
+        """Function: payForFree(string _drawId)"""
+        contract_tx = self.contract.functions.payForFree(draw_id).build_transaction(
+            self.get_tx_data()
+        )
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} Lucky Draw [{self.tx_count}]",
+            tx_label=f"{self.module_str} Free Draw [{self.tx_count}]",
         )
 
     def get_draw(self):
-        """Main function for getting the lottery draw"""
-        try:
-            # get lottery info and send txn
-            num_draws = self.client.get_lottery_info()
+        draw_amount = self.client.get_user_data()["carUserInfo"]["remainFreeDrawAmount"]
 
-            if num_draws > 0:
-                lottery_id, expire_time = self.client.get_lottery_id()
-                tx_status = self.draw(lottery_id, expire_time)
+        if int(draw_amount) == 0:
+            logger.warning(f"{self.module_str} No free draws \n")
+            return
 
-                if tx_status:
-                    sleep(
-                        20,
-                        20,
-                        label=f"{self.module_str} Checking draw results in",
-                        new_line=False,
-                    )
-                    result = self.client.get_draw_result(lottery_id)
-                    return self.handle_draw_result(result)
+        draw_id = self.client.get_draw_id()
+        tx_status = self.draw(draw_id)
 
-        except Exception as error:
-            logger.error(f"Failed to get a draw: {error}")
+        if tx_status:
+            sleep(
+                20,
+                20,
+                label=f"{self.module_str} Checking draw results in",
+                new_line=False,
+            )
 
-    def handle_draw_result(self, result):
-        """Handle the result of the lottery draw."""
-        lottery_type = result.get("lottery_type")
+        result = self.client.get_draw_result(draw_id)
+        item_name = result["itemInfos"][0]["itemName"]
+        item_star = result["itemInfos"][0]["star"]
 
-        if lottery_type == 0:
-            logger.success(f"{self.module_str} You won {result['value']}$ in BTC \n")
-        elif lottery_type == 1:
-            logger.success(f"{self.module_str} You won {result['value']} points \n")
-        else:
-            logger.debug(f"{self.module_str} You won something unusual...")
-            print_json(data=result)
-
-        return True
+        logger.success(
+            f"{self.module_str} {item_name.title()} from {item_star}-Star Collection \n"
+        )
