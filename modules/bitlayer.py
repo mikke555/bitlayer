@@ -1,7 +1,5 @@
 import random
 
-from rich import print_json
-
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
 from modules.utils import check_min_balance, create_csv, sleep
@@ -125,18 +123,20 @@ class Bitlayer(Wallet):
 
         if int(draw_amount) == 0:
             logger.warning(f"{self.module_str} No free draws \n")
-            return
+            return False
 
         draw_id = self.client.get_draw_id()
         tx_status = self.draw(draw_id)
 
-        if tx_status:
-            sleep(
-                20,
-                20,
-                label=f"{self.module_str} Checking draw results in",
-                new_line=False,
-            )
+        if not tx_status:
+            return False
+
+        sleep(
+            20,
+            20,
+            label=f"{self.module_str} Checking draw results in",
+            new_line=False,
+        )
 
         result = self.client.get_draw_result(draw_id)
         item_name = result["itemInfos"][0]["itemName"]

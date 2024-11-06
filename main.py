@@ -40,7 +40,7 @@ def process_wallets(keys, action_callback, *args, **kwargs):
                 sleep(*settings.SLEEP_BETWEEN_WALLETS)
 
         except Exception as error:
-            logger.error(f"Error processing wallet {index}/{len(keys)}: {error}")
+            logger.error(f"[{index}/{len(keys)}] Error processing wallet: {error} \n")
 
 
 def main():

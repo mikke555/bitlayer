@@ -141,7 +141,6 @@ class BitlayerApiClient:
         return data["drawId"]
 
     def get_draw_result(self, draw_id):
-        """Fetch the result of a draw"""
         data = self.get(f"/api/draw/result/{draw_id}")
 
         if not data:
