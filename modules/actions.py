@@ -35,7 +35,7 @@ class ActionHandler:
             "🍀 Free Draw": self.lucky_draw,
             "🏆 Claim Daily Tasks": self.claim_daily_tasks,
             '🏆 Claim "Transact more than X times"': self.claim_advanced_tasks,
-            "🔄 Minibridge EVM -> Bitlayer -> Claim task": self.minibridge,
+            "🔄 Minibridge EVM > Bitlayer > Claim task": self.minibridge,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
             "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
