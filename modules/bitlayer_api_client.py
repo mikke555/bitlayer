@@ -119,7 +119,7 @@ class BitlayerApiClient:
             return self.wait_for_daily_browse_status()  # Recursive call
         return checked
 
-    def claim(self, task):
+    def claim(self, task, new_line=False):
         id, type, title, pts = (
             task["taskId"],
             task["taskType"],
@@ -131,7 +131,10 @@ class BitlayerApiClient:
         if not data or data.get("message") != "ok":
             raise Exception(f"Failed to claim task {id}: {data}")
 
-        logger.success(f"{self.module_str} Claimed {pts} points for {title.strip()}")
+        line_break = "\n" if new_line else ""
+        logger.success(
+            f"{self.module_str} Claimed {pts} points for {title.strip()} {line_break}"
+        )
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def get_draw_id(self):

@@ -1,7 +1,7 @@
 import settings
+from models.wallet import Wallet
 from modules.config import BITCOW, BITCOW_ABI, BITUSD, INFINITE_AMOUNT, WBTC, logger
 from modules.utils import check_min_balance, sleep
-from modules.wallet import Wallet
 
 
 class BitCow(Wallet):

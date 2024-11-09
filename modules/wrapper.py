@@ -1,5 +1,5 @@
+from models.wallet import Wallet
 from modules.config import WBTC, logger
-from modules.wallet import Wallet
 
 
 class Wrapper(Wallet):

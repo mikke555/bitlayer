@@ -1,6 +1,6 @@
+from models.wallet import Wallet
 from modules.config import AVALON
 from modules.utils import check_min_balance
-from modules.wallet import Wallet
 
 
 class Avalon(Wallet):

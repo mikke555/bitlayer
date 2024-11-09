@@ -4,6 +4,7 @@ from rich import print as rich_print
 from rich.text import Text
 
 import settings
+from models.wallet import Wallet
 from modules.avalon import Avalon
 from modules.bitcow import BitCow
 from modules.bitlayer import Bitlayer
@@ -12,7 +13,6 @@ from modules.layerbank import LayerBank
 from modules.minibridge import MiniBridge, MiniBridgeHelper
 from modules.owlto import Owlto
 from modules.utils import create_csv, get_rand_amount, random_sleep
-from modules.wallet import Wallet
 from modules.wrapper import Wrapper
 
 
@@ -31,11 +31,11 @@ class ActionHandler:
 
     def get_action_map(self):
         return {
-            "Parse Accounts": self.parse_accounts,
-            "Free Draw": self.lucky_draw,
-            "Claim Daily Tasks": self.claim_daily_tasks,
-            'Claim "Transact more than X times"': self.claim_advanced_tasks,
-            "Minibridge EVM => Bitlayer": self.minibridge,
+            "📝 Parse Accounts": self.parse_accounts,
+            "🍀 Free Draw": self.lucky_draw,
+            "🏆 Claim Daily Tasks": self.claim_daily_tasks,
+            '🏆 Claim "Transact more than X times"': self.claim_advanced_tasks,
+            "🔄 Minibridge EVM -> Bitlayer -> Claim task": self.minibridge,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
             "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
@@ -61,31 +61,35 @@ class ActionHandler:
         logger.info(
             f"Parsing {len(self.keys)} accounts and their transaction counts...\n"
         )
-        wallets_data = []
 
+        wallets_data = []
         for index, key in enumerate(self.keys, start=1):
             wallet = Wallet(key, None)
+            balance = f"{wallet.get_balance() / 10**18:.8f}"
 
             if wallet.tx_count >= 100:
                 text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} transaction(s)",
+                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
                     style="green",
                 )
             elif wallet.tx_count >= 50:
                 text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} transaction(s)",
+                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
                     style="yellow",
                 )
             else:
                 text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} transaction(s)"
+                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
                 )
 
             rich_print(text)
-            wallets_data.append((index, wallet.address, wallet.tx_count))
+            wallets_data.append((index, wallet.address, wallet.tx_count, balance))
 
         create_csv(
-            "reports/tx_count.csv", "w", ["№", "Wallet", "TX count"], wallets_data
+            "reports/tx_count.csv",
+            "w",
+            ["№", "Wallet", "TX count", "BTC balance"],
+            wallets_data,
         )
 
     def lucky_draw(self, key, index, total):

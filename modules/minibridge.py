@@ -3,10 +3,10 @@ import random
 from web3 import Web3
 
 import settings
+from models.wallet import Wallet
 from modules.browser import Browser
 from modules.config import BITLAYER_INTERALID, CHAIN_DATA, MINIBRIDGE_ADDRESS, logger
 from modules.utils import sleep
-from modules.wallet import Wallet
 
 
 class MiniBridgeHelper(Wallet):
@@ -32,7 +32,7 @@ class MiniBridgeHelper(Wallet):
 
         if not balances:
             logger.warning(
-                f"{self.label} No balance over {settings.MIN_SEND_VALUE} found on any chain, skipping"
+                f"{self.label} No balance over {settings.MIN_SEND_VALUE} found on any chain, skipping\n"
             )
             return None
 

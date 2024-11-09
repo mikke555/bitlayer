@@ -1,6 +1,7 @@
 import random
 
 import questionary
+from questionary import Style
 
 import settings
 from modules.actions import ActionHandler
@@ -52,14 +53,23 @@ def main():
     action_map = action_handler.get_action_map()
     action_choices = list(action_map.keys())
 
+    custom_style = Style(
+        [
+            ("pointer", "fg:#E07C1A"),
+            ("highlighted", "fg:#E07C1A"),
+        ]
+    )
+
     # Present action choices to the user
     action = questionary.select(
-        "Select an action to perform:", choices=action_choices
+        "Select an action to perform:",
+        choices=action_choices,
+        style=custom_style,
     ).ask()
 
     # Execute the selected action
     if action in action_map:
-        if action == "Parse Accounts":
+        if action == "📝 Parse Accounts":
             action_map[action]()
         else:
             process_wallets(keys, action_map[action])

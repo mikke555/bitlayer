@@ -1,8 +1,8 @@
 from datetime import datetime
 
+from models.wallet import Wallet
 from modules.config import OWLTO
 from modules.utils import check_min_balance
-from modules.wallet import Wallet
 
 
 class Owlto(Wallet):

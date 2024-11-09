@@ -1,9 +1,9 @@
 import random
 
+from models.wallet import Wallet
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import BITLAYER_LOTTERY, logger
 from modules.utils import check_min_balance, create_csv, sleep
-from modules.wallet import Wallet
 
 
 class Bitlayer(Wallet):
@@ -110,7 +110,7 @@ class Bitlayer(Wallet):
             task = [task for task in daily_tasks if task["taskId"] == 3][0]
 
             self.client.start(task)
-            self.client.claim(task)
+            self.client.claim(task, new_line=True)
 
         except Exception as error:
             logger.error(error)
