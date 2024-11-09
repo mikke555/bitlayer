@@ -29,3 +29,9 @@ pip install -r requirements.txt
 ### Avalon & LayerBank
 
 * `DEPOSIT_VALUE` 
+
+### MiniBridge
+
+* `SEND_VALUE`
+* `MIN_SEND_VALUE`
+* `AVAILABLE_CHAINS`
