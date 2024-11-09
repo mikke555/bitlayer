@@ -20,3 +20,8 @@ SWAP_BACK_VALUES = [95, 99]  # e.g. 95-99%
 
 # Avalon & LayerBank
 DEPOSIT_VALUE = [0.0000001, 0.000001]
+
+# Minibridge
+SEND_VALUE = "max"  # "max" | [0.00069, 0.00137]
+MIN_SEND_VALUE = 0.00019
+AVAILABLE_CHAINS = ["optimism", "arbitrum", "base"]  # optimism | arbitrum | base

@@ -8,7 +8,7 @@ from modules.wallet import Wallet
 class Owlto(Wallet):
     def __init__(self, private_key, counter):
         super().__init__(private_key, counter)
-        self.module_str += "Owlto |"
+        self.label += "Owlto |"
         contract_abi = [
             {
                 "type": "function",
@@ -27,5 +27,5 @@ class Owlto(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} check-in [{self.tx_count}]",
+            tx_label=f"{self.label} check-in [{self.tx_count}]",
         )

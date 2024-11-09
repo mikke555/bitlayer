@@ -18,7 +18,7 @@ class Wallet:
         self.explorer = CHAIN_DATA[chain]["explorer"]
 
         self.counter = counter
-        self.module_str = f"{self.counter} {self.address} | "
+        self.label = f"{self.counter} {self.address} | "
 
         self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -74,14 +74,17 @@ class Wallet:
             **kwargs,
         }
 
-    def send_tx(self, tx, tx_label="", retry=0, gas_increment=1.1):
+    def sign_tx(self, tx):
+        return self.web3.eth.account.sign_transaction(tx, self.private_key)
+
+    def send_tx(self, tx, tx_label="", retry=0, gas_increment=1.2):
         try:
             if retry > 0:
                 # Increment gas by 10% for each retry & recalculate nonce
                 tx["gas"] = int(tx["gas"] * gas_increment)
                 tx["nonce"] = self.web3.eth.get_transaction_count(self.address)
 
-            signed_tx = self.web3.eth.account.sign_transaction(tx, self.private_key)
+            signed_tx = self.sign_tx(tx)
 
             tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
             logger.info(f"{tx_label} | {self.explorer}/tx/{tx_hash.hex()}")
@@ -94,7 +97,6 @@ class Wallet:
 
             if tx_receipt.status == 1:
                 logger.success(f"{tx_label} | Tx confirmed {attempts} \n")
-
                 return tx_receipt.status
             else:
                 raise Exception(f"{tx_label} | Tx Failed \n")

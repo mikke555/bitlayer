@@ -12,8 +12,6 @@ class Browser:
         self.proxy = proxy
         self.session = self.create_session(proxy)
 
-        self.check_ip()
-
     def create_session(self, proxy):
         session = requests.Session()
 

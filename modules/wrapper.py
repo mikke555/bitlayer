@@ -5,7 +5,7 @@ from modules.wallet import Wallet
 class Wrapper(Wallet):
     def __init__(self, private_key, counter):
         super().__init__(private_key, counter)
-        self.module_str += "WBTC |"
+        self.label += "WBTC |"
         contract_abi = [
             {"type": "function", "name": "deposit", "inputs": []},
             {
@@ -25,14 +25,14 @@ class Wrapper(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} wrap {amount:.8f} BTC [{self.tx_count}]",
+            tx_label=f"{self.label} wrap {amount:.8f} BTC [{self.tx_count}]",
         )
 
     def withdraw(self):
         balance, decimals, symbol = self.get_token(WBTC)
 
         if not balance:
-            logger.warning(f"{self.module_str} no {symbol} balance to withdraw \n")
+            logger.warning(f"{self.label} no {symbol} balance to withdraw \n")
             return
 
         contract_tx = self.contract.functions.withdraw(balance).build_transaction(
@@ -41,5 +41,5 @@ class Wrapper(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} unwrap {balance / 10 ** decimals:.8f} {symbol} [{self.tx_count}]",
+            tx_label=f"{self.label} unwrap {balance / 10 ** decimals:.8f} {symbol} [{self.tx_count}]",
         )

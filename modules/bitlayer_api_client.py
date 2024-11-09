@@ -31,6 +31,8 @@ class BitlayerApiClient:
     # Authenticate with BitLayer.org
     def login(self):
         """Authenticate with BitLayer.org using the signed message."""
+        self.browser.check_ip()
+
         signature = self.sign_message("BITLAYER")
         data = self.post(
             "/me/login", json={"address": self.address, "signature": signature}

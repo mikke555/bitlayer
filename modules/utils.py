@@ -53,8 +53,12 @@ def random_sleep(min_time, max_time):
     time.sleep(duration)
 
 
-def sleep(from_sleep, to_sleep, label="Sleep until next account", new_line=True):
-    x = random.randint(from_sleep, to_sleep)
+def sleep(sleep_time, to_sleep=None, label="Sleep until next account", new_line=True):
+    if to_sleep is not None:
+        x = random.randint(sleep_time, to_sleep)
+    else:
+        x = sleep_time
+
     desc = datetime.now().strftime("%H:%M:%S")
 
     for _ in tqdm(

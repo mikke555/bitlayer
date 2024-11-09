@@ -9,11 +9,9 @@ from modules.wallet import Wallet
 class Bitlayer(Wallet):
     def __init__(self, private_key, counter, proxy=None):
         super().__init__(private_key, counter)
-        self.module_str += "Bitlayer |"
+        self.label += "Bitlayer |"
 
-        self.client = BitlayerApiClient(
-            self.module_str, private_key, self.address, proxy
-        )
+        self.client = BitlayerApiClient(self.label, private_key, self.address, proxy)
 
         contract_abi = [
             {
@@ -47,7 +45,7 @@ class Bitlayer(Wallet):
 
             for task in txn_tasks:
                 if task["isCompleted"]:
-                    msg = f"{self.module_str} {task['title'].strip()} already completed"
+                    msg = f"{self.label} {task['title'].strip()} already completed"
                     logger.warning(msg)
                     continue
 
@@ -85,7 +83,7 @@ class Bitlayer(Wallet):
             # Claim Daily Tasks
             for task in daily_tasks:
                 if task["isCompleted"]:
-                    msg = f"{self.module_str} {task['mainTitle']} already completed"
+                    msg = f"{self.label} {task['mainTitle']} already completed"
                     logger.warning(msg)
                     continue
 
@@ -106,6 +104,17 @@ class Bitlayer(Wallet):
             print()  # line break
             return True
 
+    def claim_minibridge(self):
+        try:
+            daily_tasks = self.client.get_user_data()["tasks"]["dailyTasks"]
+            task = [task for task in daily_tasks if task["taskId"] == 3][0]
+
+            self.client.start(task)
+            self.client.claim(task)
+
+        except Exception as error:
+            logger.error(error)
+
     @check_min_balance
     def draw(self, draw_id):
         """Function: payForFree(string _drawId)"""
@@ -115,14 +124,14 @@ class Bitlayer(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} Free Draw [{self.tx_count}]",
+            tx_label=f"{self.label} Free Draw [{self.tx_count}]",
         )
 
     def get_draw(self):
         draw_amount = self.client.get_user_data()["carUserInfo"]["remainFreeDrawAmount"]
 
         if int(draw_amount) == 0:
-            logger.warning(f"{self.module_str} No free draws \n")
+            logger.warning(f"{self.label} No free draws \n")
             return False
 
         draw_id = self.client.get_draw_id()
@@ -131,19 +140,14 @@ class Bitlayer(Wallet):
         if not tx_status:
             return False
 
-        sleep(
-            20,
-            20,
-            label=f"{self.module_str} Checking draw results in",
-            new_line=False,
-        )
+        sleep(20, label=f"{self.label} Checking draw results in", new_line=False)
 
         result = self.client.get_draw_result(draw_id)
         item_name = result["itemInfos"][0]["itemName"]
         item_star = result["itemInfos"][0]["star"]
 
         logger.success(
-            f"{self.module_str} {item_name.title()} from {item_star}-Star Collection \n"
+            f"{self.label} {item_name.title()} from {item_star}-Star Collection \n"
         )
 
         return True

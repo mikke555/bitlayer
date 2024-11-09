@@ -6,7 +6,7 @@ from modules.wallet import Wallet
 class LayerBank(Wallet):
     def __init__(self, private_key, counter):
         super().__init__(private_key, counter)
-        self.module_str += "LayerBank |"
+        self.label += "LayerBank |"
         contract_abi = [
             {
                 "type": "function",
@@ -30,5 +30,5 @@ class LayerBank(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.module_str} deposit {amount / 10**18:.8f} BTC [{self.tx_count}]",
+            tx_label=f"{self.label} deposit {amount / 10**18:.8f} BTC [{self.tx_count}]",
         )

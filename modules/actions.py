@@ -9,6 +9,7 @@ from modules.bitcow import BitCow
 from modules.bitlayer import Bitlayer
 from modules.config import logger
 from modules.layerbank import LayerBank
+from modules.minibridge import MiniBridge, MiniBridgeHelper
 from modules.owlto import Owlto
 from modules.utils import create_csv, get_rand_amount, random_sleep
 from modules.wallet import Wallet
@@ -34,6 +35,7 @@ class ActionHandler:
             "Free Draw": self.lucky_draw,
             "Claim Daily Tasks": self.claim_daily_tasks,
             'Claim "Transact more than X times"': self.claim_advanced_tasks,
+            "Minibridge EVM => Bitlayer": self.minibridge,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
             "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
@@ -110,7 +112,7 @@ class ActionHandler:
 
         if balance < min_balance:
             logger.warning(
-                f"{wrapper.module_str} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, will attempt to redeem BTC instead"
+                f"{wrapper.label} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, will attempt to redeem BTC instead"
             )
             return wrapper.withdraw()
 
@@ -153,3 +155,25 @@ class ActionHandler:
         amount = get_rand_amount(*settings.DEPOSIT_VALUE)
 
         return layerbank.supply(amount)
+
+    def minibridge(self, key, index, total):
+        minibridge_helper = MiniBridgeHelper(key, f"[{index}/{total}]")
+        bridging_data = minibridge_helper.get_bridging_data()
+
+        if not bridging_data:
+            return False
+
+        chain, transfer_value = bridging_data
+
+        proxy = self.get_proxy(index)
+        minibridge = MiniBridge(key, f"[{index}/{total}]", chain=chain, proxy=proxy)
+        status = minibridge.transfer(transfer_value)
+
+        if status:
+            bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+            return bitlayer.claim_minibridge()
+        else:
+            logger.warning(
+                f"{MiniBridge.label} Bridge transfer failed for wallet {index}"
+            )
+            return False
