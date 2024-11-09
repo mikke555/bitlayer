@@ -9,7 +9,7 @@ logger.add(
     format="<white>{time:HH:mm:ss}</white> | <level>{message}</level>",
 )
 
-
+# Network data
 CHAIN_DATA = {
     "ethereum": {
         "rpc": "https://rpc.ankr.com/eth",
@@ -50,25 +50,27 @@ CHAIN_DATA = {
     },
 }
 
-# Contracts on Bitlayer Network
-WBTC = "0xfF204e2681A6fA0e2C3FaDe68a1B28fb90E4Fc5F"
-BITUSD = "0x07373d112edc4570b46996ad1187bc4ac9fb5ed0"
-
+# Smart contract addresses on Bitlayer Network
 OWLTO = "0xa9d27096bae2f47caa03ae6a1692119c7d19b4b0"
 BITLAYER_LOTTERY = "0x1fdaca95c6ba567044ea4f4c977897bebfa16b41"
 BITCOW = "0xf42f777538911510a38c80ad28b5e358a110b88a"
 AVALON = "0x5a4247763709c251c8da359674d5c362fdac626d"
 LAYERBANK = "0xf1e25704e75da0496b46bf4e3856c5480a3c247f"
 
-# Mini Bridge
+# ERC-20 tokens on Bitlayer Network
+WBTC = "0xfF204e2681A6fA0e2C3FaDe68a1B28fb90E4Fc5F"
+BITUSD = "0x07373d112edc4570b46996ad1187bc4ac9fb5ed0"
+
+# Hardcoded values from https://minibridge-conf.chaineye.tools/conf.json
 MINIBRIDGE_ADDRESS = "0x00000000000007736e2F9aA5630B8c812E1F3fc9"
 BITLAYER_INTERALID = 832
 
-
+# Infinite amount for max approve
 INFINITE_AMOUNT = (
     115792089237316195423570985008687907853269984665640564039457584007913129639935
 )
 
+# ABI
 with open("data/abi/ERC20.json") as f:
     ERC20_ABI = json.load(f)
 

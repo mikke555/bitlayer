@@ -75,9 +75,9 @@ class MiniBridgeHelper(Wallet):
             logger.error(f"{self.label} Invalid 'SEND_VALUE' in settings.py")
             exit(0)
 
-        # Remove last 4 digits and replace them with suffix
-        end_suffix = 8000 + BITLAYER_INTERALID
-        transfer_value = (transfer_value // 10000) * 10000 + end_suffix
+        # Remove last 4 digits and replace them with 8000 + dest internalId
+        confirm_code = 8000 + BITLAYER_INTERALID
+        transfer_value = (transfer_value // 10000) * 10000 + confirm_code
 
         return chain, transfer_value
 
@@ -103,7 +103,7 @@ class MiniBridge(Wallet):
 
         if status:
             logger.info(f"{self.label} Querying MiniBridge API for status")
-            return self.check_bridge_status()  # Recursive call
+            return self.check_bridge_status()
 
         return False
 
@@ -112,7 +112,7 @@ class MiniBridge(Wallet):
         resp = self.browser.session.get(url)
 
         while resp.status_code == 404:
-            return self.check_bridge_status()
+            return self.check_bridge_status()  # Recursive call
 
         data = resp.json()
         if not data:
