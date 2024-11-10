@@ -3,15 +3,20 @@ import random
 from web3 import Web3
 
 import settings
+from models.browser import Browser
 from models.wallet import Wallet
-from modules.browser import Browser
-from modules.config import BITLAYER_INTERALID, CHAIN_DATA, MINIBRIDGE_ADDRESS, logger
+from modules.config import (
+    BITLAYER_INTERALID,
+    CHAIN_DATA,
+    MAX_SEND_VALUE,
+    MIN_SEND_VALUE,
+    MINIBRIDGE_ADDRESS,
+    logger,
+)
 from modules.utils import sleep
 
 
 class MiniBridgeHelper(Wallet):
-    MIN_SEND_VALUE = int(settings.MIN_SEND_VALUE * 10**18)
-
     def __init__(self, private_key, counter):
         super().__init__(private_key, counter)
         self.label += "Minibridge |"
@@ -27,19 +32,19 @@ class MiniBridgeHelper(Wallet):
             w3 = Web3(Web3.HTTPProvider(CHAIN_DATA[chain]["rpc"]))
             balance = w3.eth.get_balance(self.address)
 
-            if balance >= MiniBridgeHelper.MIN_SEND_VALUE:
+            if balance >= MIN_SEND_VALUE:
                 balances.append((chain, balance))
 
         if not balances:
             logger.warning(
-                f"{self.label} No balance over {settings.MIN_SEND_VALUE} found on any chain, skipping\n"
+                f"{self.label} No balance over {MIN_SEND_VALUE / 10**18:.6f} found on any chain, skipping\n"
             )
             return None
 
         # Select the chain with the highest balance
         max_chain, max_balance = max(balances, key=lambda x: x[1])
 
-        logger.info(
+        logger.debug(
             f"{self.label} Highest balance found on {max_chain.title()}: {max_balance / 10**18:.6f} ETH"
         )
         return max_chain, max_balance
@@ -66,9 +71,15 @@ class MiniBridgeHelper(Wallet):
             value_range_wei = [value * 10**18 for value in settings.SEND_VALUE]
             transfer_value = random.randint(*value_range_wei)
 
+            if transfer_value < MIN_SEND_VALUE or transfer_value > MAX_SEND_VALUE:
+                logger.warning(
+                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} is outside of allowed range 0.0001-0.05 ETH, skipping"
+                )
+                return None
+
             if transfer_value > balance:
                 logger.warning(
-                    f"{self.label} Generated value {transfer_value / 10**18:.6f} exceeds wallet balance, skipping"
+                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} exceeds wallet balance, skipping"
                 )
                 return None
         else:
@@ -89,12 +100,14 @@ class MiniBridge(Wallet):
         super().__init__(private_key, counter, chain)
         self.label += "Minibridge |"
         self.browser = Browser(self.label, proxy)
+        self.w3 = Web3(Web3.HTTPProvider(CHAIN_DATA[chain]["rpc"]))
 
     def transfer(self, transfer_value):
         bridge_address = self.to_checksum(MINIBRIDGE_ADDRESS)
         tx = self.get_tx_data(value=transfer_value, to=bridge_address)
-        tx["gasPrice"] = self.web3.eth.gas_price
-        tx["gas"] = self.web3.eth.estimate_gas(tx)
+        gas = self.w3.eth.estimate_gas(tx)
+        tx["gas"] = gas
+        tx["gasPrice"] = self.w3.eth.gas_price
 
         status = self.send_tx(
             tx,
@@ -107,7 +120,7 @@ class MiniBridge(Wallet):
 
         return False
 
-    def check_bridge_status(self, retry=0):
+    def check_bridge_status(self, retry=0) -> bool:
         url = f"https://minibridge-conf.chaineye.tools/{self.address.lower()}.json"
         resp = self.browser.session.get(url)
 
@@ -130,7 +143,7 @@ class MiniBridge(Wallet):
 
         if retry < self.MAX_STATUS_CHECKS:
             sleep(
-                20,
+                5,
                 label=f"{self.label} Transfer <{status.upper()}>. Checking again in",
                 new_line=False,
             )

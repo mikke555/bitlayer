@@ -63,6 +63,8 @@ BITUSD = "0x07373d112edc4570b46996ad1187bc4ac9fb5ed0"
 
 # Hardcoded values from https://minibridge-conf.chaineye.tools/conf.json
 MINIBRIDGE_ADDRESS = "0x00000000000007736e2F9aA5630B8c812E1F3fc9"
+MIN_SEND_VALUE = 100000000000000  # 0.0001 ETH
+MAX_SEND_VALUE = 50000000000000000  # 0.05 ETH
 BITLAYER_INTERALID = 832
 
 # Infinite amount for max approve

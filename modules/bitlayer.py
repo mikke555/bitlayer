@@ -104,16 +104,41 @@ class Bitlayer(Wallet):
             print()  # line break
             return True
 
-    def claim_minibridge(self):
-        try:
-            daily_tasks = self.client.get_user_data()["tasks"]["dailyTasks"]
-            task = [task for task in daily_tasks if task["taskId"] == 3][0]
+    def get_bridging_task(self, silent=True) -> dict:
+        return self.client.get_user_data(silent=silent)["tasks"]["dailyTasks"][-1]
 
+    def claim_minibridge(self) -> bool:
+        task = self.get_bridging_task(silent=False)
+
+        if task["isCompleted"]:
+            logger.warning(f"{self.label} {task['mainTitle']} already completed")
+            return True
+
+        if task["canClaim"]:
+            self.client.claim(task)
+            self.client.get_user_data()
+            print()  # line break
+            return True
+
+        self.client.start(task)  # Start the task
+        sleep(20, label=f"{self.label} Checking status in", new_line=False)
+
+        while not task["canClaim"]:
+            task = self.get_bridging_task()
+
+            if task["isCompleted"]:
+                logger.warning(f"{self.label} {task['mainTitle']} already completed")
+                return True
+
+            if task["canClaim"]:
+                self.client.claim(task)
+                self.client.get_user_data()
+                print()  # line break
+                return True
+
+            logger.warning(f"{self.label} Claimable: {task['canClaim']}")
             self.client.start(task)
-            self.client.claim(task, new_line=True)
-
-        except Exception as error:
-            logger.error(error)
+            sleep(20, label=f"{self.label} Checking status in", new_line=False)
 
     @check_min_balance
     def draw(self, draw_id):

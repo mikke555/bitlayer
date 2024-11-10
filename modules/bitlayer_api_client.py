@@ -4,7 +4,7 @@ from eth_account import Account
 from eth_account.messages import encode_defunct
 
 import settings
-from modules.browser import Browser
+from models.browser import Browser
 from modules.config import logger
 from modules.utils import random_sleep
 
@@ -41,7 +41,7 @@ class BitlayerApiClient:
         if not data or data.get("message") != "ok":
             raise Exception(f"Authorization failed: {data}")
 
-        logger.debug(f"{self.module_str} Authorization successful")
+        # logger.debug(f"{self.module_str} Authorization successful")
         for cookie in self.session.cookies:
             self.session.cookies.set(cookie.name, cookie.value)
 
@@ -62,7 +62,7 @@ class BitlayerApiClient:
         return self._make_request("POST", endpoint, **kwargs)
 
     # API requests
-    def get_user_data(self):
+    def get_user_data(self, silent=False):
         data = self.get("/me?_data=routes%2F%28%24lang%29._app%2B%2Fme%2B%2F_index")
 
         if not data:
@@ -73,13 +73,22 @@ class BitlayerApiClient:
         rank = data["meInfo"]["rank"]
         txn = data["profile"]["txn"]
 
-        logger.debug(
-            f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}, Rank: {rank}"
-        )
+        if not silent:
+            logger.debug(
+                f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}, Rank: {rank}"
+            )
         return data
 
     def start(self, task):
-        id, title = task["taskId"], task.get("title", "Racer Center rewards")
+        id, title, main_title = (
+            task["taskId"],
+            task.get("title", "Racer Center rewards"),
+            task.get("mainTitle", None),
+        )
+
+        if main_title:
+            title = main_title
+
         data = self.post("/me/task/start", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
@@ -89,15 +98,20 @@ class BitlayerApiClient:
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def verify(self, task):
-        id, title, pts = (
+        id, title, main_title, pts = (
             task["taskId"],
             task.get("title", "Racer Center rewards"),
+            task.get("mainTitle", None),
             task["rewardPoints"],
         )
+
+        if main_title:
+            title = main_title
+
         data = self.post("/me/task/verify", json={"taskId": id})
 
         if not data or data.get("message") != "ok":
-            raise Exception(f"Failed to claim task {id}: {data}")
+            raise Exception(f"Failed to verify task {id}: {data}")
 
         if title == "Racer Center rewards":
             logger.success(f"{self.module_str} Claimed {pts} points for {title}")
@@ -119,23 +133,29 @@ class BitlayerApiClient:
             return self.wait_for_daily_browse_status()  # Recursive call
         return checked
 
-    def claim(self, task, new_line=False):
-        id, type, title, pts = (
+    def claim(self, task, silent=False) -> bool:
+        id, type, title, main_title, pts = (
             task["taskId"],
             task["taskType"],
             task["title"],
+            task.get("mainTitle", None),
             task["rewardPoints"],
         )
+
+        if main_title:
+            title = main_title
+
         data = self.post("/me/task/claim", json={"taskId": id, "taskType": type})
 
         if not data or data.get("message") != "ok":
             raise Exception(f"Failed to claim task {id}: {data}")
 
-        line_break = "\n" if new_line else ""
-        logger.success(
-            f"{self.module_str} Claimed {pts} points for {title.strip()} {line_break}"
-        )
+        if not silent:
+            logger.success(
+                f"{self.module_str} Claimed {pts} points for {title.strip()}"
+            )
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
+        return True
 
     def get_draw_id(self):
         data = self.get("/api/draw/car?drawType=2&drawTimes=1")
