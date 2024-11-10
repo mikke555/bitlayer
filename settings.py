@@ -23,5 +23,4 @@ DEPOSIT_VALUE = [0.0000001, 0.000001]
 
 # MiniBridge
 SEND_VALUE = "max"  # "max" | [0.00069, 0.00137]
-MIN_SEND_VALUE = 0.00019
 AVAILABLE_CHAINS = ["optimism", "arbitrum", "base"]  # optimism | arbitrum | base

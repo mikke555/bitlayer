@@ -33,5 +33,4 @@ pip install -r requirements.txt
 ### MiniBridge
 
 * `SEND_VALUE`
-* `MIN_SEND_VALUE`
 * `AVAILABLE_CHAINS`
