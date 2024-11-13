@@ -79,7 +79,7 @@ class MiniBridgeHelper(Wallet):
 
             if transfer_value > balance:
                 logger.warning(
-                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} exceeds wallet balance, skipping"
+                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} exceeds wallet balance, skipping\n"
                 )
                 return None
         else:
