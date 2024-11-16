@@ -10,6 +10,8 @@ SLEEP_BETWEEN_ACTIONS = [10, 20]
 # If wallet balance falls under this value, the action will be skipped
 MIN_BTC_BALANCE = 0.00000204  # $0.15
 
+DAYLY_CHECK_IN = False
+
 # WRAP BTC module
 WRAP_VALUE = [0.0000001, 0.000001]
 WRAP_TX_COUNT = [5, 10]

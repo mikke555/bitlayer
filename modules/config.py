@@ -50,9 +50,12 @@ CHAIN_DATA = {
     },
 }
 
-# Smart contract addresses on Bitlayer Network
-OWLTO = "0xa9d27096bae2f47caa03ae6a1692119c7d19b4b0"
+# Bitlayer app contracts
 BITLAYER_LOTTERY = "0x1fdaca95c6ba567044ea4f4c977897bebfa16b41"
+BITLAYER_CHECK_IN = "0xfbdc530c89f82bc5c39e253d056fc6932e814771"
+
+# Dapps on Bitlayer Network
+OWLTO = "0xa9d27096bae2f47caa03ae6a1692119c7d19b4b0"
 BITCOW = "0xf42f777538911510a38c80ad28b5e358a110b88a"
 AVALON = "0x5a4247763709c251c8da359674d5c362fdac626d"
 LAYERBANK = "0xf1e25704e75da0496b46bf4e3856c5480a3c247f"

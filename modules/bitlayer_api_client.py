@@ -62,7 +62,7 @@ class BitlayerApiClient:
         return self._make_request("POST", endpoint, **kwargs)
 
     # API requests
-    def get_user_data(self, silent=False):
+    def get_user_data(self, silent=False, end=""):
         params = {"_data": "routes/($lang)._app+/me+/_index+/_layout"}
         data = self.get("/me/tasks", params=params)
 
@@ -77,7 +77,7 @@ class BitlayerApiClient:
 
         if not silent:
             logger.debug(
-                f"{self.module_str} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn}"
+                f"{self.module_str} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
             )
         return data
 
@@ -135,19 +135,34 @@ class BitlayerApiClient:
             return self.wait_for_daily_browse_status()  # Recursive call
         return checked
 
+    def get_value_for_progress(self, task: dict) -> int:
+        cur_progress = task["extraData"]["cur_done_progress"]
+        progress_cfg = task["action"]["payload"]["progress_cfg"]
+
+        pts = 0
+
+        for item in progress_cfg:
+            if int(cur_progress) >= item["key"]:
+                pts = item["value"]
+            else:
+                return pts
+
     def claim(self, task, silent=False) -> bool:
         id, type, title, main_title, pts = (
             task["taskId"],
             task["taskType"],
             task["title"],
             task.get("mainTitle", None),
-            task["rewardPoints"],
+            task.get("rewardPoints", 0),
         )
 
         if main_title:
             title = main_title
 
         data = self.post("/me/task/claim", json={"taskId": id, "taskType": type})
+
+        if task["taskId"] == 34:
+            pts = self.get_value_for_progress(task)
 
         if not data or data.get("message") != "ok":
             raise Exception(f"Failed to claim task {id}: {data}")
@@ -174,3 +189,11 @@ class BitlayerApiClient:
             raise Exception(f"Failed to fetch draw result: {data}")
 
         return data
+
+    def start_check_in(self) -> bool:
+        data = self.get("/me/task/daily-check")
+
+        if not data or data.get("success") != True:
+            raise Exception(f"Failed to check-in: {data}")
+
+        return True

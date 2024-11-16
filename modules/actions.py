@@ -34,7 +34,7 @@ class ActionHandler:
             "📝 Parse Accounts": self.parse_accounts,
             "🍀 Free Draw": self.lucky_draw,
             "🏆 Claim Daily Tasks": self.claim_daily_tasks,
-            '🏆 Claim "Transact more than X times"': self.claim_advanced_tasks,
+            "🏆 Claim Total TXN": self.claim_advanced_tasks,
             "🔄 Minibridge EVM > Bitlayer > Claim task": self.minibridge,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,

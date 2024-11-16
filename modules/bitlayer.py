@@ -1,8 +1,10 @@
 import random
+from datetime import datetime
 
+import settings
 from models.wallet import Wallet
 from modules.bitlayer_api_client import BitlayerApiClient
-from modules.config import BITLAYER_LOTTERY, logger
+from modules.config import BITLAYER_CHECK_IN, BITLAYER_LOTTERY, logger
 from modules.utils import check_min_balance, create_csv, sleep
 
 
@@ -20,10 +22,11 @@ class Bitlayer(Wallet):
                 "inputs": [{"name": "_drawId", "type": "string"}],
             },
         ]
-        self.contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
+        self.lottery_contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
+        self.check_in_contract = self.get_contract(BITLAYER_CHECK_IN, abi=contract_abi)
 
     def dump_userdata_to_csv(self):
-        user_data = self.client.get_user_data()
+        user_data = self.client.get_user_data(end="\n")
         csv_headers = ["Wallet", "Txn count", "Points", "Level", "Rank"]
         csv_data = [
             [
@@ -34,33 +37,95 @@ class Bitlayer(Wallet):
                 user_data["meInfo"]["rank"],
             ]
         ]
-        create_csv("reports/wallets.csv", "a", csv_headers, csv_data)
+        date = datetime.today().strftime("%Y-%m-%d")
+        create_csv(f"reports/wallets-{date}.csv", "a", csv_headers, csv_data)
 
     def claim_txn_tasks(self):
         try:
             advanced_tasks = self.client.get_user_data()["tasks"]["advanceTasks"]
-            txn_tasks = [
-                task for task in advanced_tasks if "Transaction more" in task["title"]
-            ]
+            task = [task for task in advanced_tasks if "Total TXN" in task["title"]][0]
 
-            for task in txn_tasks:
-                if task["isCompleted"]:
-                    msg = f"{self.label} {task['title'].strip()} already completed"
-                    logger.warning(msg)
-                    continue
-
-                if self.tx_count >= task["targetCount"]:
-                    self.client.start(task)
-                    self.client.verify(task)
-                    self.client.claim(task)
+            if task["canClaim"]:
+                self.client.claim(task)
+                self.client.get_user_data(end="\n")
+                return True
+            else:
+                logger.warning(f"{self.label} {task['title']} already claimed\n")
+                return False
 
         except Exception as error:
             logger.error(error)
 
-        finally:
-            self.dump_userdata_to_csv()
-            print()  # line break
-            return True
+    def handle_daily_browse(self, task: dict):
+        self.client.start(task)
+
+        checked = self.client.wait_for_daily_browse_status()
+        if checked:
+            self.client.claim(task)
+
+    def handle_daily_share(self, task: dict):
+        self.client.start(task)
+        self.client.claim(task)
+
+    @check_min_balance
+    def check_in(self, progress):
+        """Function: 0x4ea1dedb(bytes32 number)"""
+        progress = str(progress).zfill(64)
+
+        tx = {
+            "chainId": self.web3.eth.chain_id,
+            "from": self.address,
+            "to": self.check_in_contract.address,
+            "nonce": self.web3.eth.get_transaction_count(self.address),
+            "value": 0,
+            "data": "0x4ea1dedb" + progress,
+            "gasPrice": self.web3.eth.gas_price,
+        }
+
+        gas = self.web3.eth.estimate_gas(tx)
+        tx["gas"] = gas
+
+        return self.send_tx(
+            tx,
+            tx_label=f"{self.label} Check-in [{self.tx_count}]",
+        )
+
+    def get_check_in_task(self) -> dict:
+        return self.client.get_user_data(silent=True)["tasks"]["dailyTasks"][0]
+
+    def get_value_for_progress(self, task: dict) -> int:
+        cur_progress = task["extraData"]["cur_done_progress"]
+        progress_cfg = task["action"]["payload"]["progress_cfg"]
+
+        for item in progress_cfg:
+            if item["key"] == cur_progress:
+                return item["value"]
+        return None
+
+    def handle_daily_check_in(self, task: dict):
+        success = self.client.start_check_in()
+
+        if not success:
+            return False
+
+        cur_progress = task["extraData"]["cur_done_progress"]
+        tx_status = self.check_in(cur_progress + 1)
+
+        if not tx_status:
+            print(tx_status)
+            return False
+
+        while True:
+            task = self.get_check_in_task()
+
+            if task["extraData"]["cur_done_progress"] > cur_progress:
+                pts = self.get_value_for_progress(task)
+                logger.success(f"{self.label} Claimed {pts} points for {task['title']}")
+                break
+
+            sleep(5, label=f"{self.label} Checking status in", new_line=False)
+
+        return True
 
     def claim_daily_tasks(self):
         try:
@@ -72,36 +137,36 @@ class Bitlayer(Wallet):
                 self.client.start(ongoing_task)
                 self.client.verify(ongoing_task)
 
-            # Exclude taskId 3 (Daily Meson Bridge)
+            # Exclude taskId 3 (Daily Bridge)
+            target_ids = [1, 2, 33] if settings.DAYLY_CHECK_IN else [1, 2]
             daily_tasks = [
                 task
                 for task in user_data["tasks"]["dailyTasks"]
-                if task["taskId"] in [1, 2]
+                if task["taskId"] in target_ids
             ]
             random.shuffle(daily_tasks)
 
             # Claim Daily Tasks
             for task in daily_tasks:
+                title = task["mainTitle"] if task["mainTitle"] else task["title"]
+
                 if task["isCompleted"]:
-                    msg = f"{self.label} {task['mainTitle']} already completed"
+                    msg = f"{self.label} {title} already completed"
                     logger.warning(msg)
                     continue
 
-                self.client.start(task)
-
                 if task["taskId"] == 1:
-                    checked = self.client.wait_for_daily_browse_status()
-                    if checked:
-                        self.client.claim(task)
-                else:
-                    self.client.claim(task)
+                    self.handle_daily_browse(task)
+                elif task["taskId"] == 2:
+                    self.handle_daily_share(task)
+                elif task["taskId"] == 33:
+                    self.handle_daily_check_in(task)
 
         except Exception as error:
             logger.error(error)
 
         finally:
             self.dump_userdata_to_csv()
-            print()  # line break
             return True
 
     def get_bridging_task(self, silent=True) -> dict:
@@ -116,8 +181,7 @@ class Bitlayer(Wallet):
 
         if task["canClaim"]:
             self.client.claim(task)
-            self.client.get_user_data()
-            print()  # line break
+            self.client.get_user_data(end="\n")
             return True
 
         self.client.start(task)  # Start the task
@@ -132,8 +196,7 @@ class Bitlayer(Wallet):
 
             if task["canClaim"]:
                 self.client.claim(task)
-                self.client.get_user_data()
-                print()  # line break
+                self.client.get_user_data(end="\n")
                 return True
 
             logger.warning(f"{self.label} Claimable: {task['canClaim']}")
@@ -143,9 +206,9 @@ class Bitlayer(Wallet):
     @check_min_balance
     def draw(self, draw_id):
         """Function: payForFree(string _drawId)"""
-        contract_tx = self.contract.functions.payForFree(draw_id).build_transaction(
-            self.get_tx_data()
-        )
+        contract_tx = self.lottery_contract.functions.payForFree(
+            draw_id
+        ).build_transaction(self.get_tx_data())
 
         return self.send_tx(
             contract_tx,
