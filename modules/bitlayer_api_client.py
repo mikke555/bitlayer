@@ -63,19 +63,21 @@ class BitlayerApiClient:
 
     # API requests
     def get_user_data(self, silent=False):
-        data = self.get("/me?_data=routes%2F%28%24lang%29._app%2B%2Fme%2B%2F_index")
+        params = {"_data": "routes/($lang)._app+/me+/_index+/_layout"}
+        data = self.get("/me/tasks", params=params)
 
         if not data:
-            raise Exception(f"{self.module_str} Failed to get user stats")
+            raise Exception(f"{self.module_str} Failed to get user data")
 
-        total_points = data["profile"]["totalPoints"]
+        points = data["profile"]["totalPoints"]
         level = data["profile"]["level"]
+        days = data["profile"]["daysOnBitlayer"]
         rank = data["meInfo"]["rank"]
         txn = data["profile"]["txn"]
 
         if not silent:
             logger.debug(
-                f"{self.module_str} Total points: {total_points}, LVL: {level}, Txn: {txn}, Rank: {rank}"
+                f"{self.module_str} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn}"
             )
         return data
 
