@@ -1,4 +1,6 @@
-# General settings
+#######################################################################
+#                         General Settings                            #
+#######################################################################
 SHUFFLE_WALLETS = False
 USE_PROXY = False
 
@@ -10,6 +12,11 @@ SLEEP_BETWEEN_ACTIONS = [10, 20]
 # If wallet balance falls under this value, the action will be skipped
 MIN_BTC_BALANCE = 0.00000204  # $0.15
 
+#######################################################################
+#                        Modules Settings                             #
+#######################################################################
+
+# Bitlayer module
 DAYLY_CHECK_IN = False
 
 # WRAP BTC module
@@ -23,6 +30,6 @@ SWAP_BACK_VALUES = [95, 99]  # e.g. 95-99%
 # Avalon & LayerBank
 DEPOSIT_VALUE = [0.0000001, 0.000001]
 
-# MiniBridge
+# MiniBridge module
 SEND_VALUE = "max"  # "max" | [0.00069, 0.00137]
 AVAILABLE_CHAINS = ["optimism", "arbitrum", "base"]  # optimism | arbitrum | base
