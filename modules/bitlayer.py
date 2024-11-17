@@ -68,17 +68,15 @@ class Bitlayer(Wallet):
         self.client.claim(task)
 
     @check_min_balance
-    def check_in(self, progress):
+    def check_in(self):
         """Function: 0x4ea1dedb(bytes32 number)"""
-        progress = str(progress).zfill(64)
-
         tx = {
             "chainId": self.web3.eth.chain_id,
             "from": self.address,
             "to": self.check_in_contract.address,
             "nonce": self.web3.eth.get_transaction_count(self.address),
             "value": 0,
-            "data": "0x4ea1dedb" + progress,
+            "data": "0x4ea1dedb0000000000000000000000000000000000000000000000000000000000000001",
             "gasPrice": self.web3.eth.gas_price,
         }
 
@@ -109,10 +107,9 @@ class Bitlayer(Wallet):
             return False
 
         cur_progress = task["extraData"]["cur_done_progress"]
-        tx_status = self.check_in(cur_progress + 1)
+        tx_status = self.check_in()
 
         if not tx_status:
-            print(tx_status)
             return False
 
         while True:
@@ -137,7 +134,7 @@ class Bitlayer(Wallet):
                 self.client.start(ongoing_task)
                 self.client.verify(ongoing_task)
 
-            # Exclude taskId 3 (Daily Bridge)
+            # Exclude taskId 3 (Daily Bridge), optionally include taskId 33 (Daily Check-in)
             target_ids = [1, 2, 33] if settings.DAYLY_CHECK_IN else [1, 2]
             daily_tasks = [
                 task
