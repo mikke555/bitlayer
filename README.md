@@ -16,6 +16,10 @@ pip install -r requirements.txt
 * `SLEEP_BETWEEN_ACTIONS`
 * `MIN_BTC_BALANCE`
 
+### Bitlayer.org app
+
+* `DAYLY_CHECK_IN ` 
+
 ### Wrap BTC module
 
 * `WRAP_VALUE ` 
