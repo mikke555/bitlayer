@@ -16,7 +16,7 @@ pip install -r requirements.txt
 * `SLEEP_BETWEEN_ACTIONS`
 * `MIN_BTC_BALANCE`
 
-### Bitlayer.org app
+### Bitlayer.org module
 
 * `DAYLY_CHECK_IN ` 
 
@@ -34,7 +34,7 @@ pip install -r requirements.txt
 
 * `DEPOSIT_VALUE` 
 
-### MiniBridge
+### MiniBridge module
 
 * `SEND_VALUE`
 * `AVAILABLE_CHAINS`
