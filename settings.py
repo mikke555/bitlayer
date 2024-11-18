@@ -10,14 +10,14 @@ SLEEP_BETWEEN_WALLETS = [10, 20]
 SLEEP_BETWEEN_ACTIONS = [10, 20]
 
 # If wallet balance falls under this value, the action will be skipped
-MIN_BTC_BALANCE = 0.00000204  # $0.15
+MIN_BTC_BALANCE = 0.000002  # $0.20
 
 #######################################################################
 #                        Modules Settings                             #
 #######################################################################
 
 # Bitlayer module
-DAYLY_CHECK_IN = False
+DAYLY_CHECK_IN = True
 
 # WRAP BTC module
 WRAP_VALUE = [0.0000001, 0.000001]

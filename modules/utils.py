@@ -18,7 +18,7 @@ def check_min_balance(func):
 
         if balance < min_balance:
             logger.warning(
-                f"{self.module_str} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, skipping \n"
+                f"{self.label} Current balance is under {settings.MIN_BTC_BALANCE:.8f} BTC, skipping \n"
             )
             return
         return func(self, *args, **kwargs)
