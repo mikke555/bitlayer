@@ -248,6 +248,7 @@ class BitlayerApiClient:
         if not data:
             raise Exception(f"Failed to get unboxing status for box_id {box_id}")
 
+        # 3 is the magic number!
         if data.get("status") == 3:
             return data
 

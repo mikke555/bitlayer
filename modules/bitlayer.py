@@ -282,8 +282,6 @@ class Bitlayer(Wallet):
 
         logger.debug(f"{self.label} Got {unopened_count} boxes to open")
 
-        data = self.client.get_minging_gala_info()
-
         # Get txn params
         box_info = self.client.get_box_info()
         box_id = box_info["box_id"]
