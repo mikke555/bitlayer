@@ -1,8 +1,9 @@
 #######################################################################
 #                         General Settings                            #
 #######################################################################
+
 SHUFFLE_WALLETS = False
-USE_PROXY = False
+USE_PROXY = True
 
 RETRY_COUNT = 1
 
@@ -31,5 +32,5 @@ SWAP_BACK_VALUES = [95, 99]  # e.g. 95-99%
 DEPOSIT_VALUE = [0.0000001, 0.000001]
 
 # MiniBridge module
-SEND_VALUE = "max"  # "max" | [0.00069, 0.00137]
+SEND_VALUE = [0.00069, 0.00137]  # "max" | [0.00069, 0.00137]
 AVAILABLE_CHAINS = ["optimism", "arbitrum", "base"]  # optimism | arbitrum | base
