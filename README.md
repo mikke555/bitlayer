@@ -16,7 +16,7 @@ pip install -r requirements.txt
 * `SLEEP_BETWEEN_ACTIONS`
 * `MIN_BTC_BALANCE`
 
-### Bitlayer.org module
+### Bitlayer module
 
 * `DAYLY_CHECK_IN ` 
 
