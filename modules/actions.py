@@ -36,6 +36,7 @@ class ActionHandler:
             "🏆 Claim Daily Tasks": self.claim_daily_tasks,
             "🏆 Claim Total TXN": self.claim_advanced_tasks,
             "🔄 Minibridge EVM > Bitlayer > Claim task": self.minibridge,
+            "Open Treasure Box": self.open_treasure_box,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
             "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
@@ -181,3 +182,8 @@ class ActionHandler:
                 f"{MiniBridge.label} Bridge transfer failed for wallet {index}"
             )
             return False
+
+    def open_treasure_box(self, key, index, total):
+        proxy = self.get_proxy(index)
+        bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+        return bitlayer.batch_open_free_boxes()

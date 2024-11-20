@@ -1,10 +1,16 @@
 import random
+import time
 from datetime import datetime
 
 import settings
 from models.wallet import Wallet
 from modules.bitlayer_api_client import BitlayerApiClient
-from modules.config import BITLAYER_CHECK_IN, BITLAYER_LOTTERY, logger
+from modules.config import (
+    BITLAYER_CHECK_IN,
+    BITLAYER_LOTTERY,
+    BITLAYER_MINING_GALA,
+    logger,
+)
 from modules.utils import check_min_balance, create_csv, sleep
 
 
@@ -21,9 +27,21 @@ class Bitlayer(Wallet):
                 "name": "payForFree",
                 "inputs": [{"name": "_drawId", "type": "string"}],
             },
+            {
+                "type": "function",
+                "name": "openBatchFreeBox",
+                "inputs": [
+                    {"name": "boxId", "type": "string"},
+                    {"name": "expireTime", "type": "uint256"},
+                    {"name": "openTimes", "type": "uint16"},
+                ],
+            },
         ]
         self.lottery_contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
         self.check_in_contract = self.get_contract(BITLAYER_CHECK_IN, abi=contract_abi)
+        self.mining_gala_contract = self.get_contract(
+            BITLAYER_MINING_GALA, abi=contract_abi
+        )
 
     def dump_userdata_to_csv(self):
         user_data = self.client.get_user_data(end="\n")
@@ -233,6 +251,60 @@ class Bitlayer(Wallet):
 
         logger.success(
             f"{self.label} {item_name.title()} from {item_star}-Star Collection \n"
+        )
+
+        return True
+
+    @check_min_balance
+    def open_box(self, box_id, expire_at, count):
+        """openBatchFreeBox(string boxId, uint256 expireTime, uint16 openTimes)"""
+        cost_wei = 16200000000000  # 0.0000162 BTC
+        contract_tx = self.mining_gala_contract.functions.openBatchFreeBox(
+            box_id, expire_at, count
+        ).build_transaction(self.get_tx_data(value=cost_wei))
+
+        return self.send_tx(
+            contract_tx,
+            tx_label=f"{self.label} Open box [{self.tx_count}]",
+        )
+
+    def batch_open_free_boxes(self):
+        data = self.client.get_minging_gala_info()
+        unopened_count = data["userInfo"]["unopened_count"]
+        unboxing_count = data["userInfo"]["unboxing_count"]
+        btr = data["userInfo"]["btr"]
+
+        if unopened_count == 0:
+            logger.warning(
+                f"{self.label} No boxes to open, unboxed previously: {unboxing_count}, BTR: {btr}\n"
+            )
+            return False
+
+        logger.debug(f"{self.label} Got {unopened_count} boxes to open")
+
+        data = self.client.get_minging_gala_info()
+
+        # Get txn params
+        box_info = self.client.get_box_info()
+        box_id = box_info["box_id"]
+        expire_at = box_info["expire_at"]
+        count = box_info["count"]
+
+        if expire_at <= int(time.time()):
+            logger.warning(f"{self.label} Sorry, the unboxing time has expired.\n")
+            return False
+
+        tx_status = self.open_box(box_id, expire_at, count)
+
+        if not tx_status:
+            return False
+
+        unboxing_status = self.client.get_unboxing_status(box_id=box_id)
+        count = unboxing_status["count"]
+        btr = unboxing_status["btr"]
+
+        logger.success(
+            f"{self.label} Successfully opened {count} boxes, claimed {btr} BTR\n"
         )
 
         return True

@@ -197,3 +197,59 @@ class BitlayerApiClient:
             raise Exception(f"Failed to check-in: {data}")
 
         return True
+
+    def get_minging_gala_info(self) -> dict:
+        params = {"_data": "routes/($lang)._app+/mining-gala+/_index/index"}
+        data = self.get("/mining-gala", params=params)
+
+        if not data:
+            raise Exception(f"Failed to get mining gala info: {data}")
+
+        return data
+
+    def get_box_info(self) -> dict:
+        """
+        Retrieves box information, including ID, expiration timestamp and unboxed item count.
+
+        Returns:
+            dict: Example:
+            {
+                "box_id": "b2ef1a30-ccc0-419d-90da-0e0480c550bc",
+                "expire_at": 1732095067,
+                "count": 10
+            }
+        """
+        params = {"type": "project", "count": "-1"}
+        data = self.get("/api/mining-gala/box", params=params)
+
+        if not data:
+            raise Exception(f"Failed to get box info: {data}")
+
+        return data
+
+    def get_unboxing_status(self, box_id: str, attempts: int = 0) -> dict:
+        """
+        Recursively retrieves the unboxing status of a box until the status equals 3
+        or the maximum number of attempts (10) is reached.
+
+        Returns:
+            dict: Example:
+            {
+                "btr": 20.2,
+                "status": 3,
+                "count": 10
+            }
+        """
+        if attempts >= 10:
+            raise Exception(f"Max attempts reached for box_id {box_id}")
+
+        data = self.get(f"/api/mining-gala/result/{box_id}")
+
+        if not data:
+            raise Exception(f"Failed to get unboxing status for box_id {box_id}")
+
+        if data.get("status") == 3:
+            return data
+
+        random_sleep(5, 5)
+        return self.get_unboxing_status(box_id, attempts + 1)
