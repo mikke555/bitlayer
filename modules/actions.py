@@ -12,7 +12,7 @@ from modules.config import logger
 from modules.layerbank import LayerBank
 from modules.minibridge import MiniBridge, MiniBridgeHelper
 from modules.owlto import Owlto
-from modules.utils import create_csv, get_rand_amount, random_sleep
+from modules.utils import create_csv, get_btc_price, get_rand_amount, random_sleep
 from modules.wrapper import Wrapper
 
 
@@ -67,21 +67,21 @@ class ActionHandler:
         for index, key in enumerate(self.keys, start=1):
             wallet = Wallet(key, None)
             balance = f"{wallet.get_balance() / 10**18:.8f}"
+            balance_usd = round((wallet.get_balance() / 10**18) * get_btc_price(), 2)
+            index_str = f"{index}".zfill(2) if index < 10 else str(index)
 
+            # Determine style based on transaction count
             if wallet.tx_count >= 100:
-                text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
-                    style="green",
-                )
+                style = "green"
             elif wallet.tx_count >= 50:
-                text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
-                    style="yellow",
-                )
+                style = "yellow"
             else:
-                text = Text(
-                    f"{index} {wallet.address}: {wallet.tx_count} txn(s) : {balance} BTC",
-                )
+                style = None
+
+            text = Text(
+                f"{index_str} {wallet.address}: {wallet.tx_count} txn: {balance} BTC, {balance_usd} USD",
+                style=style,
+            )
 
             rich_print(text)
             wallets_data.append((index, wallet.address, wallet.tx_count, balance))

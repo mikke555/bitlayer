@@ -4,11 +4,20 @@ import random
 import time
 from datetime import datetime
 
+import requests
 from tqdm import tqdm
 from web3 import Web3
 
 import settings
 from modules.config import logger
+
+
+def get_btc_price(symbol="BTC") -> float:
+    url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}USDT"
+    response = requests.get(url)
+    data = response.json()
+
+    return float(data["price"])
 
 
 def check_min_balance(func):
