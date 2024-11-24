@@ -84,12 +84,14 @@ class ActionHandler:
             )
 
             rich_print(text)
-            wallets_data.append((index, wallet.address, wallet.tx_count, balance))
+            wallets_data.append(
+                (index, wallet.address, wallet.tx_count, balance, balance_usd)
+            )
 
         create_csv(
             "reports/tx_count.csv",
             "w",
-            ["№", "Wallet", "TX count", "BTC balance"],
+            ["№", "Wallet", "TX count", "BTC balance", "USD"],
             wallets_data,
         )
 
