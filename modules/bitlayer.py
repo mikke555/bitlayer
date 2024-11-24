@@ -11,7 +11,7 @@ from modules.config import (
     BITLAYER_MINING_GALA,
     logger,
 )
-from modules.utils import check_min_balance, create_csv, sleep
+from modules.utils import check_min_balance, create_csv, random_sleep, sleep
 
 
 class Bitlayer(Wallet):
@@ -305,4 +305,41 @@ class Bitlayer(Wallet):
             f"{self.label} Successfully opened {count} boxes, claimed {btr} BTR\n"
         )
 
+        return True
+
+    def assemble_cars(self):
+        item_list = self.client.get_car_info()["itemList"]
+        random_sleep(2, 5)
+
+        # Organize items by star level
+        star_items = {}
+        for item in item_list:
+            star = item["star"]
+            if star not in star_items:
+                star_items[star] = []
+            star_items[star].append(item)
+
+        # Attempt to assemble
+        for star in star_items.keys():
+            items = star_items[star]
+            can_assemble = True
+
+            # Check if all items have amount >= 1
+            for item in items:
+                if int(item["amount"]) < 1:
+                    can_assemble = False
+                    break
+
+            if can_assemble:
+                logger.success(f"{self.label} A {star}-star car can be assembled")
+                status = self.client.assemble_car(int(star))
+
+                if status:
+                    item_list = self.client.get_car_info()["itemList"]
+            else:
+                logger.warning(
+                    f"{self.label} A {star}-star car cannot be assembled yet"
+                )
+
+        print()  # line break
         return True

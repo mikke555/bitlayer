@@ -254,3 +254,25 @@ class BitlayerApiClient:
 
         random_sleep(5, 5)
         return self.get_unboxing_status(box_id, attempts + 1)
+
+    def get_car_info(self):
+        params = {"_data": "routes/($lang)._app+/assemble-cars/_index"}
+        data = self.get(f"/assemble-cars", params=params)["userInfo"]
+
+        if not data:
+            raise Exception(f"Failed to get car info")
+
+        logger.debug(
+            f"{self.module_str} Normal cars: {data['normalCarAmount']}, Premium cars: {data['premiumCarAmount']}, Top cars: {data['topCarAmount']}"
+        )
+        return data
+
+    def assemble_car(self, star_rating: int) -> bool:
+        payload = {"starRating": star_rating}
+        data = self.post("/api/raffle/assemble", json=payload)
+
+        if not data or data.get("message") != "ok":
+            raise Exception(f"Failed to assemble {star_rating}-star car: {data}")
+
+        logger.success(f"{self.module_str} {data['message']}")
+        return True
