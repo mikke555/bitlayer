@@ -258,7 +258,7 @@ class Bitlayer(Wallet):
     @check_min_balance
     def open_box(self, box_id, expire_at, count):
         """openBatchFreeBox(string boxId, uint256 expireTime, uint16 openTimes)"""
-        cost_wei = 16200000000000  # 0.0000162 BTC
+        cost_wei = 12600000000000  # 0.0000126 BTC
         contract_tx = self.mining_gala_contract.functions.openBatchFreeBox(
             box_id, expire_at, count
         ).build_transaction(self.get_tx_data(value=cost_wei))
