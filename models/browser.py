@@ -6,8 +6,8 @@ from modules.config import logger
 
 
 class Browser:
-    def __init__(self, module_str, proxy=None):
-        self.module_str = module_str
+    def __init__(self, label, proxy=None):
+        self.label = label
         self.ua = UserAgent()
         self.proxy = proxy
         self.session = self.create_session(proxy)
@@ -38,7 +38,7 @@ class Browser:
                 "https://httpbin.org/ip", proxies=proxies, timeout=10
             )
             ip = resp.json()["origin"]
-            logger.info(f"{self.module_str} Current IP: {ip}")
+            logger.info(f"{self.label} Current IP: {ip}")
 
         except Exception as error:
-            logger.error(f"{self.module_str} Failed to get IP: {error}")
+            logger.error(f"{self.label} Failed to get IP: {error}")

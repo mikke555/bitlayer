@@ -10,11 +10,11 @@ from modules.utils import random_sleep
 
 
 class BitlayerApiClient:
-    def __init__(self, module_str, private_key, address, proxy=None):
-        self.module_str = module_str
+    def __init__(self, label, private_key, address, proxy=None):
+        self.label = label
         self.private_key = private_key
         self.address = address
-        self.browser = Browser(module_str, proxy)
+        self.browser = Browser(label, proxy)
         self.session = self.browser.session
         self.base_url = "https://www.bitlayer.org"
         self.login()
@@ -67,7 +67,7 @@ class BitlayerApiClient:
         data = self.get("/me/tasks", params=params)
 
         if not data:
-            raise Exception(f"{self.module_str} Failed to get user data")
+            raise Exception(f"{self.label} Failed to get user data")
 
         points = data["profile"]["totalPoints"]
         level = data["profile"]["level"]
@@ -77,7 +77,7 @@ class BitlayerApiClient:
 
         if not silent:
             logger.debug(
-                f"{self.module_str} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
+                f"{self.label} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
             )
         return data
 
@@ -96,7 +96,7 @@ class BitlayerApiClient:
         if not data or data.get("message") != "ok":
             raise Exception(f"Failed to start {title}: {data}")
 
-        logger.info(f"{self.module_str} Started {title.strip()}")
+        logger.info(f"{self.label} Started {title.strip()}")
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def verify(self, task):
@@ -116,7 +116,7 @@ class BitlayerApiClient:
             raise Exception(f"Failed to verify task {id}: {data}")
 
         if title == "Racer Center rewards":
-            logger.success(f"{self.module_str} Claimed {pts} points for {title}")
+            logger.success(f"{self.label} Claimed {pts} points for {title}")
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def wait_for_daily_browse_status(self):
@@ -131,7 +131,7 @@ class BitlayerApiClient:
 
         if not checked:
             time.sleep(5)
-            logger.info(f"{self.module_str} Claimable: {checked}")
+            logger.info(f"{self.label} Claimable: {checked}")
             return self.wait_for_daily_browse_status()  # Recursive call
         return checked
 
@@ -168,9 +168,7 @@ class BitlayerApiClient:
             raise Exception(f"Failed to claim task {id}: {data}")
 
         if not silent:
-            logger.success(
-                f"{self.module_str} Claimed {pts} points for {title.strip()}"
-            )
+            logger.success(f"{self.label} Claimed {pts} points for {title.strip()}")
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
         return True
 
@@ -263,7 +261,7 @@ class BitlayerApiClient:
             raise Exception(f"Failed to get car info")
 
         logger.debug(
-            f"{self.module_str} Normal cars: {data['normalCarAmount']}, Premium cars: {data['premiumCarAmount']}, Top cars: {data['topCarAmount']}"
+            f"{self.label} Normal cars: {data['normalCarAmount']}, Premium cars: {data['premiumCarAmount']}, Top cars: {data['topCarAmount']}"
         )
         return data
 
@@ -274,5 +272,5 @@ class BitlayerApiClient:
         if not data or data.get("message") != "ok":
             raise Exception(f"Failed to assemble {star_rating}-star car: {data}")
 
-        logger.success(f"{self.module_str} {data['message']}")
+        logger.success(f"{self.label} {data['message']}")
         return True
