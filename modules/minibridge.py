@@ -94,7 +94,7 @@ class MiniBridgeHelper(Wallet):
 
 
 class MiniBridge(Wallet):
-    MAX_STATUS_CHECKS = 5
+    MAX_STATUS_CHECKS = 10
 
     def __init__(self, private_key, counter, chain, proxy=None):
         super().__init__(private_key, counter, chain)
