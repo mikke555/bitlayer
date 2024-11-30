@@ -313,7 +313,7 @@ class Bitlayer(Wallet):
 
         headers = [
             "Wallet",
-            "Txn normalCarAmount",
+            "normalCarAmount",
             "premiumCarAmount",
             "topCarAmount",
         ]
