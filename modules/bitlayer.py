@@ -308,7 +308,25 @@ class Bitlayer(Wallet):
         return True
 
     def assemble_cars(self):
-        item_list = self.client.get_car_info()["itemList"]
+        car_data = self.client.get_car_info()
+        item_list = car_data["itemList"]
+
+        headers = [
+            "Wallet",
+            "Txn normalCarAmount",
+            "premiumCarAmount",
+            "topCarAmount",
+        ]
+        data = [
+            [
+                self.address,
+                car_data["normalCarAmount"],
+                car_data["premiumCarAmount"],
+                car_data["topCarAmount"],
+            ]
+        ]
+        date = datetime.today().strftime("%Y-%m-%d")
+        create_csv(f"reports/cars-{date}.csv", "a", headers, data)
         random_sleep(2, 5)
 
         # Organize items by star level
@@ -323,12 +341,13 @@ class Bitlayer(Wallet):
         for star in star_items.keys():
             items = star_items[star]
             can_assemble = True
+            missing_count = 0
 
             # Check if all items have amount >= 1
             for item in items:
                 if int(item["amount"]) < 1:
                     can_assemble = False
-                    break
+                    missing_count += 1
 
             if can_assemble:
                 logger.success(f"{self.label} A {star}-star car can be assembled")
@@ -338,7 +357,7 @@ class Bitlayer(Wallet):
                     item_list = self.client.get_car_info()["itemList"]
             else:
                 logger.warning(
-                    f"{self.label} A {star}-star car cannot be assembled yet"
+                    f"{self.label} A {star}-star car cannot be assembled yet ({missing_count} items missing)"
                 )
 
         print()  # line break
