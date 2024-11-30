@@ -105,9 +105,16 @@ class MiniBridge(Wallet):
     def transfer(self, transfer_value):
         bridge_address = self.to_checksum(MINIBRIDGE_ADDRESS)
         tx = self.get_tx_data(value=transfer_value, to=bridge_address)
-        gas = self.w3.eth.estimate_gas(tx)
+
+        gas = self.web3.eth.estimate_gas(tx)
         tx["gas"] = gas
-        tx["gasPrice"] = self.w3.eth.gas_price
+
+        max_priority_fee_per_gas = self.web3.eth.max_priority_fee
+        base_fee = (self.web3.eth.get_block("latest"))["baseFeePerGas"]
+        max_fee_per_gas = base_fee + max_priority_fee_per_gas
+
+        tx["maxPriorityFeePerGas"] = max_priority_fee_per_gas
+        tx["maxFeePerGas"] = int(max_fee_per_gas * 1.05)
 
         status = self.send_tx(
             tx,
