@@ -185,16 +185,18 @@ class ActionHandler:
 
         proxy = self.get_proxy(index)
         minibridge = MiniBridge(key, f"[{index}/{total}]", chain=chain, proxy=proxy)
-        status = minibridge.transfer(transfer_value)
+        # status = minibridge.transfer(transfer_value)
+        return minibridge.transfer(transfer_value)
 
-        if status:
-            bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
-            return bitlayer.claim_minibridge()
-        else:
-            logger.warning(
-                f"{MiniBridge.label} Bridge transfer failed for wallet {index}"
-            )
-            return False
+        # no points for Minibridge atm
+        # if status:
+        #     bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+        #     return bitlayer.claim_minibridge()
+        # else:
+        #     logger.warning(
+        #         f"{MiniBridge.label} Bridge transfer failed for wallet {index}"
+        #     )
+        #     return False
 
     def open_treasure_box(self, key, index, total):
         proxy = self.get_proxy(index)
