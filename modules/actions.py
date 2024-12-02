@@ -35,7 +35,7 @@ class ActionHandler:
             "🍀 Free Draw": self.lucky_draw,
             "🏆 Claim Daily Tasks": self.claim_daily_tasks,
             "🏆 Claim Total TXN": self.claim_advanced_tasks,
-            "🔄 Minibridge EVM > Bitlayer > Claim task": self.minibridge,
+            "🔄 Minibridge EVM > Bitlayer": self.minibridge,
             "Open Treasure Box": self.open_treasure_box,
             "Assemble Car": self.assemble_car,
             self.wrap_btc_option: self.wrap_btc,
