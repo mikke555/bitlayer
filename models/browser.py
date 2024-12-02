@@ -1,5 +1,7 @@
 import requests
 from fake_useragent import UserAgent
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 import settings
 from modules.config import logger
@@ -14,6 +16,19 @@ class Browser:
 
     def create_session(self, proxy):
         session = requests.Session()
+
+        # Configure retries
+        retries = Retry(
+            total=5,  # Increase the number of retries here
+            backoff_factor=0.5,  # Wait time between retries (exponential backoff)
+            status_forcelist=[500, 502, 503, 504],  # Retry on these HTTP status codes
+            allowed_methods=frozenset(["GET", "POST"]),  # Methods to retry
+        )
+
+        # Mount the adapter with the retry configuration
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
 
         if proxy:
             session.proxies.update({"http": proxy, "https": proxy})
