@@ -68,12 +68,12 @@ class MiniBridgeHelper(Wallet):
             transfer_value = int(balance * 0.98)
 
         elif isinstance(settings.SEND_VALUE, list):
-            value_range_wei = [value * 10**18 for value in settings.SEND_VALUE]
+            value_range_wei = [int(value * 10**18) for value in settings.SEND_VALUE]
             transfer_value = random.randint(*value_range_wei)
 
             if transfer_value < MIN_SEND_VALUE or transfer_value > MAX_SEND_VALUE:
                 logger.warning(
-                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} is outside of allowed range 0.0001-0.05 ETH, skipping"
+                    f"{self.label} Generated amount {transfer_value / 10**18:.6f} is outside of allowed range {MIN_SEND_VALUE / 10**18}-{MAX_SEND_VALUE / 10**18} ETH, skipping"
                 )
                 return None
 
@@ -86,7 +86,7 @@ class MiniBridgeHelper(Wallet):
             logger.error(f"{self.label} Invalid 'SEND_VALUE' in settings.py")
             exit(0)
 
-        # Remove last 4 digits and replace them with 8000 + dest internalId
+        # Remove last 4 digits and replace them with 8000 + dest BITLAYER_INTERALID
         confirm_code = 8000 + BITLAYER_INTERALID
         transfer_value = (transfer_value // 10000) * 10000 + confirm_code
 
