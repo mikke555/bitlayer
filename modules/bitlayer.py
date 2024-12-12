@@ -311,35 +311,21 @@ class Bitlayer(Wallet):
         car_data = self.client.get_car_info()
         item_list = car_data["itemList"]
 
-        headers = [
-            "Wallet",
-            "normalCarAmount",
-            "premiumCarAmount",
-            "topCarAmount",
-        ]
-        data = [
-            [
-                self.address,
-                car_data["normalCarAmount"],
-                car_data["premiumCarAmount"],
-                car_data["topCarAmount"],
-            ]
-        ]
-        date = datetime.today().strftime("%Y-%m-%d")
-        create_csv(f"reports/cars-{date}.csv", "a", headers, data)
-        random_sleep(2, 5)
+        # Initialize missing parts counters
+        missing_3 = 0
+        missing_4 = 0
+        missing_5 = 0
 
         # Organize items by star level
         star_items = {}
         for item in item_list:
-            star = item["star"]
+            star = int(item["star"])  # Ensure star is an integer
             if star not in star_items:
                 star_items[star] = []
             star_items[star].append(item)
 
         # Attempt to assemble
-        for star in star_items.keys():
-            items = star_items[star]
+        for star, items in star_items.items():
             can_assemble = True
             missing_count = 0
 
@@ -351,8 +337,7 @@ class Bitlayer(Wallet):
 
             if can_assemble:
                 logger.success(f"{self.label} A {star}-star car can be assembled")
-                status = self.client.assemble_car(int(star))
-
+                status = self.client.assemble_car(star)
                 if status:
                     item_list = self.client.get_car_info()["itemList"]
             else:
@@ -360,5 +345,38 @@ class Bitlayer(Wallet):
                     f"{self.label} A {star}-star car cannot be assembled yet ({missing_count} items missing)"
                 )
 
+            # Assign missing_count to appropriate variable
+            if star == 3:
+                missing_3 = missing_count if not can_assemble else 0
+            elif star == 4:
+                missing_4 = missing_count if not can_assemble else 0
+            elif star == 5:
+                missing_5 = missing_count if not can_assemble else 0
+
+        # Prepare final CSV data
+        headers = [
+            "Wallet",
+            "normalCarAmount",
+            "missing parts",
+            "premiumCarAmount",
+            "missing parts",
+            "topCarAmount",
+            "missing parts",
+        ]
+        date = datetime.today().strftime("%Y-%m-%d")
+
+        data = [
+            [
+                self.address,
+                car_data["normalCarAmount"],
+                missing_3,
+                car_data["premiumCarAmount"],
+                missing_4,
+                car_data["topCarAmount"],
+                missing_5,
+            ]
+        ]
+
+        create_csv(f"reports/cars-{date}.csv", "a", headers, data)
         print()  # line break
         return True
