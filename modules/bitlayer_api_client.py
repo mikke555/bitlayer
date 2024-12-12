@@ -70,6 +70,7 @@ class BitlayerApiClient:
             raise Exception(f"{self.label} Failed to get user data")
 
         points = data["profile"]["totalPoints"]
+        btr = data["profile"]["btr"]
         level = data["profile"]["level"]
         days = data["profile"]["daysOnBitlayer"]
         rank = data["meInfo"]["rank"]
@@ -77,7 +78,7 @@ class BitlayerApiClient:
 
         if not silent:
             logger.debug(
-                f"{self.label} Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
+                f"{self.label} BTR: {btr}, Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
             )
         return data
 

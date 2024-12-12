@@ -45,11 +45,12 @@ class Bitlayer(Wallet):
 
     def dump_userdata_to_csv(self):
         user_data = self.client.get_user_data(end="\n")
-        csv_headers = ["Wallet", "Txn count", "Points", "Level", "Rank"]
+        csv_headers = ["Wallet", "Txn count", "BTR", "Points", "Level", "Rank"]
         csv_data = [
             [
                 self.address,
                 self.tx_count,
+                user_data["profile"]["btr"],
                 user_data["profile"]["totalPoints"],
                 user_data["profile"]["level"],
                 user_data["meInfo"]["rank"],
