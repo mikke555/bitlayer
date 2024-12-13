@@ -1,4 +1,5 @@
 import random
+from itertools import cycle
 
 import questionary
 from questionary import Style
@@ -12,22 +13,12 @@ from modules.utils import sleep
 def load_keys(file_path):
     with open(file_path) as f:
         keys = [row.strip() for row in f if row.strip()]
-        if settings.SHUFFLE_WALLETS:
-            random.shuffle(keys)
-        return keys
+    return keys
 
 
 def load_proxies(file_path):
     with open(file_path) as file:
         proxies = [f"http://{row.strip()}" for row in file if row.strip()]
-
-    if settings.USE_PROXY and not proxies:
-        logger.warning("Proxies are enabled but proxies.txt is empty")
-        exit(0)
-
-    if settings.SHUFFLE_WALLETS:
-        random.shuffle(proxies)
-
     return proxies
 
 
@@ -47,6 +38,23 @@ def process_wallets(keys, action_callback, *args, **kwargs):
 def main():
     keys = load_keys("keys.txt")
     proxies = load_proxies("proxies.txt") if settings.USE_PROXY else []
+
+    if settings.USE_PROXY and not proxies:
+        logger.warning("Proxies are enabled but proxies.txt is empty")
+        exit(0)
+
+    # Cycle proxies if there are fewer proxies than keys
+    if settings.USE_PROXY and len(keys) > len(proxies):
+        proxies = [p for p, _ in zip(cycle(proxies), range(len(keys)))]
+
+    # Shuffle together if needed
+    if settings.SHUFFLE_WALLETS and settings.USE_PROXY:
+        combined = list(zip(keys, proxies))
+        random.shuffle(combined)
+        keys, proxies = zip(*combined)
+        keys, proxies = list(keys), list(proxies)
+    elif settings.SHUFFLE_WALLETS:
+        random.shuffle(keys)
 
     action_handler = ActionHandler(keys, proxies)
 
