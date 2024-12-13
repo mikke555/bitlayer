@@ -78,7 +78,7 @@ class BitlayerApiClient:
 
         if not silent:
             logger.debug(
-                f"{self.label} BTR: {btr}, Points: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
+                f"{self.label} BTR: {btr}, Pts: {points}, LVL: {level}, Rank: {rank}, Days on Bitlayer: {days}, Txn: {txn} {end}"
             )
         return data
 
@@ -189,13 +189,21 @@ class BitlayerApiClient:
 
         return data
 
-    def start_check_in(self) -> bool:
-        data = self.get("/me/task/daily-check")
+    def start_daily_check(self) -> bool:
+        data = self.get("/api/btcfi/daily-check")
 
         if not data or data.get("success") != True:
-            raise Exception(f"Failed to check-in: {data}")
+            raise Exception(f"Failed to start daily check: {data}")
 
         return True
+
+    def claim_daily_check(self) -> int:
+        data = self.get("/api/btcfi/claim-order")
+
+        if not data or data.get("success") != True:
+            raise Exception(f"Failed to claim daily check: {data}")
+
+        return int(data["data"]["orderId"])
 
     def get_minging_gala_info(self) -> dict:
         params = {"_data": "routes/($lang)._app+/mining-gala+/_index/index"}

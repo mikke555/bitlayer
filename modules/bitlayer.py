@@ -45,7 +45,7 @@ class Bitlayer(Wallet):
 
     def dump_userdata_to_csv(self):
         user_data = self.client.get_user_data(end="\n")
-        csv_headers = ["Wallet", "Txn count", "BTR", "Points", "Level", "Rank"]
+        csv_headers = ["Wallet", "Txn count", "BTR", "Pts", "Level", "Rank"]
         csv_data = [
             [
                 self.address,
@@ -87,20 +87,28 @@ class Bitlayer(Wallet):
         self.client.claim(task)
 
     @check_min_balance
-    def check_in(self):
+    def check_in(self, order_id):
         """Function: 0x4ea1dedb(bytes32 number)"""
+        method_id = "4ea1dedb"
+        param = (order_id * 100) + 2
+        param_hex = param.to_bytes(32, byteorder="big").hex()
+        data = "0x" + method_id + param_hex
+
+        max_priority_fee = self.web3.eth.max_priority_fee
+        max_fee_per_gas = self.web3.eth.gas_price + max_priority_fee
+
         tx = {
             "chainId": self.web3.eth.chain_id,
             "from": self.address,
             "to": self.check_in_contract.address,
             "nonce": self.web3.eth.get_transaction_count(self.address),
             "value": 0,
-            "data": "0x4ea1dedb0000000000000000000000000000000000000000000000000000000000000001",
-            "gasPrice": self.web3.eth.gas_price,
+            "data": data,
+            "maxPriorityFeePerGas": max_priority_fee,
+            "maxFeePerGas": max_fee_per_gas,
         }
 
-        gas = self.web3.eth.estimate_gas(tx)
-        tx["gas"] = gas
+        tx["gas"] = self.web3.eth.estimate_gas(tx)
 
         return self.send_tx(
             tx,
@@ -120,13 +128,18 @@ class Bitlayer(Wallet):
         return None
 
     def handle_daily_check_in(self, task: dict):
-        success = self.client.start_check_in()
-
+        success = self.client.start_daily_check()
         if not success:
             return False
 
-        cur_progress = task["extraData"]["cur_done_progress"]
-        tx_status = self.check_in()
+        random_sleep(3, 5)
+
+        order_id = self.client.claim_daily_check()
+        if not order_id:
+            return False
+
+        cur_done_progress = task["extraData"]["cur_done_progress"]
+        tx_status = self.check_in(order_id)
 
         if not tx_status:
             return False
@@ -134,9 +147,9 @@ class Bitlayer(Wallet):
         while True:
             task = self.get_check_in_task()
 
-            if task["extraData"]["cur_done_progress"] > cur_progress:
-                pts = self.get_value_for_progress(task)
-                logger.success(f"{self.label} Claimed {pts} points for {task['title']}")
+            if task["extraData"]["cur_done_progress"] > cur_done_progress:
+                btr = self.get_value_for_progress(task)
+                logger.success(f"{self.label} Claimed {btr} BTR for {task['title']}")
                 break
 
             sleep(5, label=f"{self.label} Checking status in", new_line=False)
@@ -154,7 +167,7 @@ class Bitlayer(Wallet):
                 self.client.verify(ongoing_task)
 
             # Exclude taskId 3 (Daily Bridge), optionally include taskId 33 (Daily Check-in)
-            target_ids = [1, 2, 33] if settings.DAYLY_CHECK_IN else [1, 2]
+            target_ids = [1, 2, 36] if settings.DAYLY_CHECK_IN else [1, 2]
             daily_tasks = [
                 task
                 for task in user_data["tasks"]["dailyTasks"]
@@ -175,7 +188,7 @@ class Bitlayer(Wallet):
                     self.handle_daily_browse(task)
                 elif task["taskId"] == 2:
                     self.handle_daily_share(task)
-                elif task["taskId"] == 33:
+                elif task["taskId"] == 36:
                     self.handle_daily_check_in(task)
 
         except Exception as error:
