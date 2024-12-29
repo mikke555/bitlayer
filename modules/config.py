@@ -1,11 +1,13 @@
 import json
+from datetime import datetime
 from sys import stderr
 
 from loguru import logger
 
 logger.remove()
+logger.add(stderr, format="<white>{time:HH:mm:ss}</white> | <level>{message}</level>")
 logger.add(
-    stderr,
+    f"reports/debug-{datetime.today().strftime('%Y-%m-%d')}.log",
     format="<white>{time:HH:mm:ss}</white> | <level>{message}</level>",
 )
 
