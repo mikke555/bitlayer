@@ -1,5 +1,7 @@
-import random
+import time
+from datetime import datetime, timedelta, timezone
 from itertools import cycle
+from random import randint, shuffle
 
 import questionary
 from questionary import Style
@@ -22,17 +24,49 @@ def load_proxies(file_path):
     return proxies
 
 
+def wait_until_midnight_utc():
+    """Waits until a random UTC time between 00:02 and 05:30 on the next day."""
+    now = datetime.now(timezone.utc)
+
+    rand_minute, rand_hour = randint(2, 30), randint(0, 5)
+    target_time = (now + timedelta(days=1)).replace(
+        hour=rand_hour, minute=rand_minute, second=0
+    )
+    # Calculate waiting time until the next midnight UTC
+    time_to_wait = (target_time - now).total_seconds()
+
+    if time_to_wait > 0:
+        hours, remainder = divmod(time_to_wait, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        target_time_str = target_time.strftime("%H:%M")
+
+        logger.info(
+            f"Waiting until {target_time_str} UTC ({int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds)..."
+        )
+        time.sleep(time_to_wait)
+    logger.info(f"It's {target_time_str} UTC. Starting execution.\n")
+
+
 def process_wallets(keys, action_callback, *args, **kwargs):
-    for index, key in enumerate(keys, start=1):
-        try:
-            tx_status = action_callback(key, index, len(keys), *args, **kwargs)
+    while True:
+        for index, key in enumerate(keys, start=1):
+            try:
+                tx_status = action_callback(key, index, len(keys), *args, **kwargs)
 
-            # Sleep between wallets
-            if tx_status and index < len(keys):
-                sleep(*settings.SLEEP_BETWEEN_WALLETS)
+                # Sleep between wallets
+                if tx_status and index < len(keys):
+                    sleep(*settings.SLEEP_BETWEEN_WALLETS)
 
-        except Exception as error:
-            logger.error(f"[{index}/{len(keys)}] Error processing wallet: {error} \n")
+            except Exception as error:
+                logger.error(
+                    f"[{index}/{len(keys)}] Error processing wallet: {error} \n"
+                )
+
+        if settings.INFINITY_LOOP:
+            logger.success("All done! 🎉")
+            wait_until_midnight_utc()
+        else:
+            break
 
 
 def main():
@@ -45,16 +79,17 @@ def main():
 
     # Cycle proxies if there are fewer proxies than keys
     if settings.USE_PROXY and len(keys) > len(proxies):
-        proxies = [p for p, _ in zip(cycle(proxies), range(len(keys)))]
+        proxies = [proxy for proxy, _ in zip(cycle(proxies), range(len(keys)))]
 
     # Shuffle together if needed
     if settings.SHUFFLE_WALLETS and settings.USE_PROXY:
         combined = list(zip(keys, proxies))
-        random.shuffle(combined)
+        shuffle(combined)
         keys, proxies = zip(*combined)
         keys, proxies = list(keys), list(proxies)
+
     elif settings.SHUFFLE_WALLETS:
-        random.shuffle(keys)
+        shuffle(keys)
 
     action_handler = ActionHandler(keys, proxies)
 

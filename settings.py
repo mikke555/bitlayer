@@ -4,6 +4,7 @@
 
 SHUFFLE_WALLETS = False
 USE_PROXY = True
+INFINITY_LOOP = True
 
 RETRY_COUNT = 1
 
