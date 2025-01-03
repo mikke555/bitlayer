@@ -198,7 +198,7 @@ class BitlayerApiClient:
         return True
 
     def claim_daily_check(self) -> int:
-        data = self.get("/api/btcfi/claim-order")
+        data = self.get("/api/btcfi/claim-order?from_page=")
 
         if not data or data.get("success") != True:
             raise Exception(f"Failed to claim daily check: {data}")

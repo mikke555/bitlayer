@@ -17,10 +17,7 @@ from modules.utils import check_min_balance, create_csv, random_sleep, sleep
 class Bitlayer(Wallet):
     def __init__(self, private_key, counter, proxy=None):
         super().__init__(private_key, counter)
-        self.label += "Bitlayer |"
-
         self.client = BitlayerApiClient(self.label, private_key, self.address, proxy)
-
         contract_abi = [
             {
                 "type": "function",
@@ -34,6 +31,13 @@ class Bitlayer(Wallet):
                     {"name": "boxId", "type": "string"},
                     {"name": "expireTime", "type": "uint256"},
                     {"name": "openTimes", "type": "uint16"},
+                ],
+            },
+            {
+                "type": "function",
+                "name": "claimPoint",
+                "inputs": [
+                    {"internalType": "uint256", "name": "projectId", "type": "uint256"}
                 ],
             },
         ]
@@ -88,30 +92,13 @@ class Bitlayer(Wallet):
 
     @check_min_balance
     def check_in(self, order_id):
-        """Function: 0x4ea1dedb(bytes32 number)"""
-        method_id = "4ea1dedb"
-        param = (order_id * 100) + 2
-        param_hex = param.to_bytes(32, byteorder="big").hex()
-        data = "0x" + method_id + param_hex
-
-        max_priority_fee = self.web3.eth.max_priority_fee
-        max_fee_per_gas = self.web3.eth.gas_price + max_priority_fee
-
-        tx = {
-            "chainId": self.web3.eth.chain_id,
-            "from": self.address,
-            "to": self.check_in_contract.address,
-            "nonce": self.web3.eth.get_transaction_count(self.address),
-            "value": 0,
-            "data": data,
-            "maxPriorityFeePerGas": max_priority_fee,
-            "maxFeePerGas": max_fee_per_gas,
-        }
-
-        tx["gas"] = self.web3.eth.estimate_gas(tx)
+        """Function: claimPoint(uint256 projectId)"""
+        contract_tx = self.check_in_contract.functions.claimPoint(
+            (order_id * 100) + 2
+        ).build_transaction(self.get_tx_data())
 
         return self.send_tx(
-            tx,
+            contract_tx,
             tx_label=f"{self.label} Check-in [{self.tx_count}]",
         )
 
