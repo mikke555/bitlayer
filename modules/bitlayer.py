@@ -17,6 +17,7 @@ from modules.utils import check_min_balance, create_csv, random_sleep, sleep
 class Bitlayer(Wallet):
     def __init__(self, private_key, counter, proxy=None):
         super().__init__(private_key, counter)
+        self.label += "Bitlayer |"
         self.client = BitlayerApiClient(self.label, private_key, self.address, proxy)
         contract_abi = [
             {
