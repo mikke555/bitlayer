@@ -372,7 +372,13 @@ class Bitlayer(Wallet):
         headers = ["Wallet", "Bronze", "Silver", "Gold", "Total"]
         date = datetime.today().strftime("%Y-%m-%d")
         data = [
-            [self.address, data["bronze"]["amount"], data["silver"]["amount"], data["gold"]["amount"], data["amount"]]
+            [
+                self.address,
+                int(data["bronze"]["amount"]) / 10**18,
+                int(data["silver"]["amount"]) / 10**18,
+                int(data["gold"]["amount"]) / 10**18,
+                int(data["amount"]) / 10**18,
+            ]
         ]
         create_csv(f"reports/awards-{date}.csv", "a", headers, data)
         return True
