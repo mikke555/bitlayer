@@ -24,14 +24,18 @@ def load_proxies(file_path):
     return proxies
 
 
+def load_recipients(file_path):
+    with open(file_path) as f:
+        recipients = [row.strip() for row in f if row.strip()]
+    return recipients
+
+
 def wait_until_midnight_utc():
     """Waits until a random UTC time between 00:02 and 05:30 on the next day."""
     now = datetime.now(timezone.utc)
 
     rand_minute, rand_hour = randint(2, 30), randint(0, 5)
-    target_time = (now + timedelta(days=1)).replace(
-        hour=rand_hour, minute=rand_minute, second=0
-    )
+    target_time = (now + timedelta(days=1)).replace(hour=rand_hour, minute=rand_minute, second=0)
     # Calculate waiting time until the next midnight UTC
     time_to_wait = (target_time - now).total_seconds()
 
@@ -47,20 +51,25 @@ def wait_until_midnight_utc():
     logger.info(f"It's {target_time_str} UTC. Starting execution.\n")
 
 
-def process_wallets(keys, action_callback, *args, **kwargs):
+def process_wallets(keys, action_callback, recipients, *args, **kwargs):
     while True:
         for index, key in enumerate(keys, start=1):
             try:
-                tx_status = action_callback(key, index, len(keys), *args, **kwargs)
+                # Check if this is claim_airdrop which needs recipient parameter
+                if hasattr(action_callback, "__name__") and "claim_airdrop" in str(action_callback):
+                    # Get recipient for this wallet (cycle through recipients if fewer than keys)
+                    recipient_index = (index - 1) % len(recipients) if recipients else 0
+                    recipient = recipients[recipient_index] if recipients else None
+                    tx_status = action_callback(key, index, len(keys), recipient, *args, **kwargs)
+                else:
+                    tx_status = action_callback(key, index, len(keys), *args, **kwargs)
 
                 # Sleep between wallets
                 if tx_status and index < len(keys):
                     sleep(*settings.SLEEP_BETWEEN_WALLETS)
 
             except Exception as error:
-                logger.error(
-                    f"[{index}/{len(keys)}] Error processing wallet: {error} \n"
-                )
+                logger.error(f"[{index}/{len(keys)}] Error processing wallet: {error} \n")
 
         if settings.INFINITY_LOOP:
             logger.success("All done! 🎉")
@@ -72,6 +81,7 @@ def process_wallets(keys, action_callback, *args, **kwargs):
 def main():
     keys = load_keys("keys.txt")
     proxies = load_proxies("proxies.txt") if settings.USE_PROXY else []
+    recipients = load_recipients("recipients.txt")
 
     if settings.USE_PROXY and not proxies:
         logger.warning("Proxies are enabled but proxies.txt is empty")
@@ -91,7 +101,7 @@ def main():
     elif settings.SHUFFLE_WALLETS:
         shuffle(keys)
 
-    action_handler = ActionHandler(keys, proxies)
+    action_handler = ActionHandler(keys, proxies, recipients)
 
     action_map = action_handler.get_action_map()
     action_choices = list(action_map.keys())
@@ -115,7 +125,7 @@ def main():
         if action == "📝 Parse Accounts":
             action_map[action]()
         else:
-            process_wallets(keys, action_map[action])
+            process_wallets(keys, action_map[action], recipients)
 
 
 if __name__ == "__main__":

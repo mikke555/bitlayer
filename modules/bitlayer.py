@@ -6,9 +6,12 @@ import settings
 from models.wallet import Wallet
 from modules.bitlayer_api_client import BitlayerApiClient
 from modules.config import (
+    AIRDROP_ABI,
+    BITLAYER_AIRDROP,
     BITLAYER_CHECK_IN,
     BITLAYER_LOTTERY,
     BITLAYER_MINING_GALA,
+    BTR,
     logger,
 )
 from modules.utils import check_min_balance, create_csv, random_sleep, sleep
@@ -43,6 +46,8 @@ class Bitlayer(Wallet):
         self.lottery_contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
         self.check_in_contract = self.get_contract(BITLAYER_CHECK_IN, abi=contract_abi)
         self.mining_gala_contract = self.get_contract(BITLAYER_MINING_GALA, abi=contract_abi)
+        self.airdrop_contract = self.get_contract(BITLAYER_AIRDROP, abi=AIRDROP_ABI)
+        self.btr_contract = self.get_contract(BTR)
 
     def dump_userdata_to_csv(self):
         user_data = self.client.get_user_data(end="\n")
@@ -382,3 +387,32 @@ class Bitlayer(Wallet):
         ]
         create_csv(f"reports/awards-{date}.csv", "a", headers, data)
         return True
+
+    def claim_airdrop(self):
+        claimable_amount = self.airdrop_contract.functions.getClaimable(self.address).call()
+
+        if not claimable_amount:
+            logger.warning(f"{self.label} Nothing to claim or already claimed\n")
+            return False
+
+        contract_tx = self.airdrop_contract.functions.claimAll().build_transaction(self.get_tx_data())
+
+        return self.send_tx(
+            contract_tx,
+            tx_label=f"{self.label} Claim Airdrop [{self.tx_count}]",
+        )
+
+    def send_btr_to_exchange(self, recipient):
+        recipient = self.web3.to_checksum_address(recipient)
+        balance = self.btr_contract.functions.balanceOf(self.address).call()
+
+        if not balance:
+            logger.warning(f"{self.label} No balance to send\n")
+            return False
+
+        contract_tx = self.btr_contract.functions.transfer(recipient, balance).build_transaction(self.get_tx_data())
+
+        return self.send_tx(
+            contract_tx,
+            tx_label=f"{self.label} Send BTR to Exchange [{self.tx_count}]",
+        )

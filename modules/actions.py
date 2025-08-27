@@ -24,13 +24,15 @@ class ActionHandler:
 
     wrap_btc_option = f"Wrap BTC {settings.WRAP_TX_COUNT[0]} to {settings.WRAP_TX_COUNT[1]} times"
 
-    def __init__(self, keys, proxies):
+    def __init__(self, keys, proxies, recipients):
         self.keys = keys
         self.proxies = proxies
+        self.recipients = recipients
 
     def get_action_map(self):
         return {
             "🏆 Check Airdrop": self.get_awards,
+            "Claim Airdrop": self.claim_airdrop,
             "GasZip EVM > Bitlayer": self.gaszip,
             "Parse Accounts": self.parse_accounts,
             "Free Draw": self.lucky_draw,
@@ -213,3 +215,17 @@ class ActionHandler:
         proxy = self.get_proxy(index)
         bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
         return bitlayer.get_awards()
+
+    def claim_airdrop(self, key, index, total, recipient):
+        proxy = self.get_proxy(index)
+        bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+
+        if bitlayer.get_balance() / 10**18 <= 0.00000223:
+            self.gaszip(key, index, total)
+            random_sleep(10, 15)
+
+        tx_status = bitlayer.claim_airdrop()
+        random_sleep(10, 15)
+
+        if settings.SEND_TO_EXCHANGE:
+            bitlayer.send_btr_to_exchange(recipient)

@@ -2,6 +2,8 @@
 #                         General Settings                            #
 #######################################################################
 
+SEND_TO_EXCHANGE = True
+
 SHUFFLE_WALLETS = False
 USE_PROXY = True
 INFINITY_LOOP = False

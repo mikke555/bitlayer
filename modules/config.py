@@ -56,6 +56,7 @@ CHAIN_DATA = {
 BITLAYER_LOTTERY = "0x1fdaca95c6ba567044ea4f4c977897bebfa16b41"
 BITLAYER_CHECK_IN = "0x5e63fc3ea7482b77c9750a2e9c649aa93eaf2883"
 BITLAYER_MINING_GALA = "0x06b4e9599c38d41a40e4d4278f84039789215b90"
+BITLAYER_AIRDROP = "0xab63c02dc03f48f6eb2037bb8d535ef5c3e73ea9"
 
 # Dapps on Bitlayer Network
 OWLTO = "0xa9d27096bae2f47caa03ae6a1692119c7d19b4b0"
@@ -66,6 +67,7 @@ LAYERBANK = "0xf1e25704e75da0496b46bf4e3856c5480a3c247f"
 # ERC-20 tokens on Bitlayer Network
 WBTC = "0xfF204e2681A6fA0e2C3FaDe68a1B28fb90E4Fc5F"
 BITUSD = "0x07373d112edc4570b46996ad1187bc4ac9fb5ed0"
+BTR = "0x0e4cf4affdb72b39ea91fa726d291781cbd020bf"
 
 # Hardcoded values from https://minibridge-conf.chaineye.tools/conf.json
 MINIBRIDGE_ADDRESS = "0x00000000000007736e2F9aA5630B8c812E1F3fc9"
@@ -86,3 +88,6 @@ with open("data/abi/ERC20.json") as f:
 
 with open("data/abi/BitCow.json") as f:
     BITCOW_ABI = json.load(f)
+
+with open("data/abi/airdrop.json") as f:
+    AIRDROP_ABI = json.load(f)
