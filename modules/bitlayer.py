@@ -37,16 +37,12 @@ class Bitlayer(Wallet):
             {
                 "type": "function",
                 "name": "claimPoint",
-                "inputs": [
-                    {"internalType": "uint256", "name": "projectId", "type": "uint256"}
-                ],
+                "inputs": [{"internalType": "uint256", "name": "projectId", "type": "uint256"}],
             },
         ]
         self.lottery_contract = self.get_contract(BITLAYER_LOTTERY, abi=contract_abi)
         self.check_in_contract = self.get_contract(BITLAYER_CHECK_IN, abi=contract_abi)
-        self.mining_gala_contract = self.get_contract(
-            BITLAYER_MINING_GALA, abi=contract_abi
-        )
+        self.mining_gala_contract = self.get_contract(BITLAYER_MINING_GALA, abi=contract_abi)
 
     def dump_userdata_to_csv(self):
         user_data = self.client.get_user_data(end="\n")
@@ -94,9 +90,9 @@ class Bitlayer(Wallet):
     @check_min_balance
     def check_in(self, order_id):
         """Function: claimPoint(uint256 projectId)"""
-        contract_tx = self.check_in_contract.functions.claimPoint(
-            (order_id * 100) + 2
-        ).build_transaction(self.get_tx_data())
+        contract_tx = self.check_in_contract.functions.claimPoint((order_id * 100) + 2).build_transaction(
+            self.get_tx_data()
+        )
 
         return self.send_tx(
             contract_tx,
@@ -156,11 +152,7 @@ class Bitlayer(Wallet):
 
             # Exclude taskId 3 (Daily Bridge), optionally include taskId 33 (Daily Check-in)
             target_ids = [1, 2, 36] if settings.DAYLY_CHECK_IN else [1, 2]
-            daily_tasks = [
-                task
-                for task in user_data["tasks"]["dailyTasks"]
-                if task["taskId"] in target_ids
-            ]
+            daily_tasks = [task for task in user_data["tasks"]["dailyTasks"] if task["taskId"] in target_ids]
             random.shuffle(daily_tasks)
 
             # Claim Daily Tasks
@@ -223,9 +215,7 @@ class Bitlayer(Wallet):
     @check_min_balance
     def draw(self, draw_id):
         """Function: payForFree(string _drawId)"""
-        contract_tx = self.lottery_contract.functions.payForFree(
-            draw_id
-        ).build_transaction(self.get_tx_data())
+        contract_tx = self.lottery_contract.functions.payForFree(draw_id).build_transaction(self.get_tx_data())
 
         return self.send_tx(
             contract_tx,
@@ -251,9 +241,7 @@ class Bitlayer(Wallet):
         item_name = result["itemInfos"][0]["itemName"]
         item_star = result["itemInfos"][0]["star"]
 
-        logger.success(
-            f"{self.label} {item_name.title()} from {item_star}-Star Collection \n"
-        )
+        logger.success(f"{self.label} {item_name.title()} from {item_star}-Star Collection \n")
 
         return True
 
@@ -261,9 +249,9 @@ class Bitlayer(Wallet):
     def open_box(self, box_id, expire_at, count):
         """openBatchFreeBox(string boxId, uint256 expireTime, uint16 openTimes)"""
         cost_wei = 12600000000000  # 0.0000126 BTC
-        contract_tx = self.mining_gala_contract.functions.openBatchFreeBox(
-            box_id, expire_at, count
-        ).build_transaction(self.get_tx_data(value=cost_wei))
+        contract_tx = self.mining_gala_contract.functions.openBatchFreeBox(box_id, expire_at, count).build_transaction(
+            self.get_tx_data(value=cost_wei)
+        )
 
         return self.send_tx(
             contract_tx,
@@ -277,9 +265,7 @@ class Bitlayer(Wallet):
         btr = data["userInfo"]["btr"]
 
         if unopened_count == 0:
-            logger.warning(
-                f"{self.label} No boxes to open, unboxed previously: {unboxing_count}, BTR: {btr}\n"
-            )
+            logger.warning(f"{self.label} No boxes to open, unboxed previously: {unboxing_count}, BTR: {btr}\n")
             return False
 
         logger.debug(f"{self.label} Got {unopened_count} boxes to open")
@@ -303,9 +289,7 @@ class Bitlayer(Wallet):
         count = unboxing_status["count"]
         btr = unboxing_status["btr"]
 
-        logger.success(
-            f"{self.label} Successfully opened {count} boxes, claimed {btr} BTR\n"
-        )
+        logger.success(f"{self.label} Successfully opened {count} boxes, claimed {btr} BTR\n")
 
         return True
 
@@ -381,4 +365,13 @@ class Bitlayer(Wallet):
 
         create_csv(f"reports/cars-{date}.csv", "a", headers, data)
         print()  # line break
+        return True
+
+    def get_awards(self):
+        data = self.client.get_awards()
+        headers = ["Wallet", "Bronze", "Silver", "Gold", "Total"]
+        data = [
+            [self.address, data["bronze"]["amount"], data["silver"]["amount"], data["gold"]["amount"], data["amount"]]
+        ]
+        create_csv(f"reports/awards-{datetime.now():%d_%m_%Y_%H_%M_%S}.csv", "a", headers, data)
         return True

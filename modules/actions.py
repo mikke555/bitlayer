@@ -21,9 +21,7 @@ class ActionHandler:
     Centralized handler for mapping user actions to their corresponding functions.
     """
 
-    wrap_btc_option = (
-        f"Wrap BTC {settings.WRAP_TX_COUNT[0]} to {settings.WRAP_TX_COUNT[1]} times"
-    )
+    wrap_btc_option = f"Wrap BTC {settings.WRAP_TX_COUNT[0]} to {settings.WRAP_TX_COUNT[1]} times"
 
     def __init__(self, keys, proxies):
         self.keys = keys
@@ -31,21 +29,18 @@ class ActionHandler:
 
     def get_action_map(self):
         return {
-            "📝 Parse Accounts": self.parse_accounts,
-            "🍀 Free Draw": self.lucky_draw,
-            "🏆 Claim Daily Tasks": self.claim_daily_tasks,
-            "🏆 Claim Total TXN": self.claim_advanced_tasks,
-            "🔄 Minibridge EVM > Bitlayer": self.minibridge,
+            "🏆 Check Airdrop": self.get_awards,
+            "Parse Accounts": self.parse_accounts,
+            "Free Draw": self.lucky_draw,
+            "Claim Daily Tasks": self.claim_daily_tasks,
+            "Claim Total TXN": self.claim_advanced_tasks,
+            "Minibridge EVM > Bitlayer": self.minibridge,
             "Open Treasure Box": self.open_treasure_box,
             "Assemble Car": self.assemble_car,
             self.wrap_btc_option: self.wrap_btc,
             "Unwrap WBTC": self.unwrap_wbtc,
-            "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(
-                key, idx, total, "WBTC"
-            ),
-            "Swap BTC > BITUSD > WBTC": lambda key, idx, total: self.swap_btc(
-                key, idx, total, "BITUSD"
-            ),
+            "Swap BTC > WBTC > BTC": lambda key, idx, total: self.swap_btc(key, idx, total, "WBTC"),
+            "Swap BTC > BITUSD > WBTC": lambda key, idx, total: self.swap_btc(key, idx, total, "BITUSD"),
             "Check in with Owlto": self.check_in_owlto,
             "Deposit to Avalon": self.deposit_to_avalon,
             "Deposit to LayerBank": self.deposit_to_layerbank,
@@ -60,9 +55,7 @@ class ActionHandler:
         return None
 
     def parse_accounts(self):
-        logger.info(
-            f"Parsing {len(self.keys)} accounts and their transaction counts...\n"
-        )
+        logger.info(f"Parsing {len(self.keys)} accounts and their transaction counts...\n")
 
         wallets_data = []
         for index, key in enumerate(self.keys, start=1):
@@ -85,9 +78,7 @@ class ActionHandler:
             )
 
             rich_print(text)
-            wallets_data.append(
-                (index, wallet.address, wallet.tx_count, balance, balance_usd)
-            )
+            wallets_data.append((index, wallet.address, wallet.tx_count, balance, balance_usd))
 
         create_csv(
             "reports/tx_count.csv",
@@ -202,3 +193,8 @@ class ActionHandler:
         proxy = self.get_proxy(index)
         bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
         return bitlayer.batch_open_free_boxes()
+
+    def get_awards(self, key, index, total):
+        proxy = self.get_proxy(index)
+        bitlayer = Bitlayer(key, f"[{index}/{total}]", proxy)
+        return bitlayer.get_awards()

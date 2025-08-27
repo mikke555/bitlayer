@@ -23,9 +23,7 @@ class BitlayerApiClient:
     def sign_message(self, message):
         """Sign a message with the private key."""
         message_encoded = encode_defunct(text=message)
-        signed_message = Account.sign_message(
-            message_encoded, private_key=self.private_key
-        )
+        signed_message = Account.sign_message(message_encoded, private_key=self.private_key)
         return signed_message.signature.hex()
 
     # Authenticate with BitLayer.org
@@ -34,9 +32,7 @@ class BitlayerApiClient:
         self.browser.check_ip()
 
         signature = self.sign_message("BITLAYER")
-        data = self.post(
-            "/me/login", json={"address": self.address, "signature": signature}
-        )
+        data = self.post("/me/login", json={"address": self.address, "signature": signature})
 
         if not data or data.get("message") != "ok":
             raise Exception(f"Authorization failed: {data}")
@@ -121,9 +117,7 @@ class BitlayerApiClient:
         random_sleep(*settings.SLEEP_BETWEEN_ACTIONS)
 
     def wait_for_daily_browse_status(self):
-        data = self.post(
-            "/me/task/report", json={"taskId": 1, "pageName": "dapp_center"}
-        )
+        data = self.post("/me/task/report", json={"taskId": 1, "pageName": "dapp_center"})
 
         if not data:
             raise Exception(f"Failed to report daily browse status: {data}")
@@ -283,3 +277,17 @@ class BitlayerApiClient:
 
         logger.success(f"{self.label} {data['message']}")
         return True
+
+    def get_awards(self) -> dict:
+        data = self.get("/airdrop/btr/awards")
+
+        if not data:
+            raise Exception(f"Failed to fetch awards")
+
+        logger.debug(f"{self.label} Eligible: {data['eligible']}")
+        logger.debug(f"{self.label} Bronze: {int(data['bronze']['amount']) / 10 ** 18} BTR")
+        logger.debug(f"{self.label} Silver: {int(data['silver']['amount']) / 10 ** 18} BTR")
+        logger.debug(f"{self.label} Gold: {int(data['gold']['amount']) / 10 ** 18} BTR")
+        logger.debug(f"{self.label} Total: {int(data['amount']) / 10 ** 18} BTR")
+
+        return data
