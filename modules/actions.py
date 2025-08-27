@@ -9,6 +9,7 @@ from modules.avalon import Avalon
 from modules.bitcow import BitCow
 from modules.bitlayer import Bitlayer
 from modules.config import logger
+from modules.gaszip import GasZip, GasZipHelper
 from modules.layerbank import LayerBank
 from modules.minibridge import MiniBridge, MiniBridgeHelper
 from modules.owlto import Owlto
@@ -30,6 +31,7 @@ class ActionHandler:
     def get_action_map(self):
         return {
             "🏆 Check Airdrop": self.get_awards,
+            "GasZip EVM > Bitlayer": self.gaszip,
             "Parse Accounts": self.parse_accounts,
             "Free Draw": self.lucky_draw,
             "Claim Daily Tasks": self.claim_daily_tasks,
@@ -164,6 +166,19 @@ class ActionHandler:
         amount = get_rand_amount(*settings.DEPOSIT_VALUE)
 
         return layerbank.supply(amount)
+
+    def gaszip(self, key, index, total):
+        gaszip_helper = GasZipHelper(key, f"[{index}/{total}]")
+        bridging_data = gaszip_helper.get_bridging_data()
+
+        if not bridging_data:
+            return False
+
+        chain, transfer_value = bridging_data
+
+        proxy = self.get_proxy(index)
+        gaszip = GasZip(key, f"[{index}/{total}]", chain=chain, proxy=proxy)
+        return gaszip.transfer(transfer_value)
 
     def minibridge(self, key, index, total):
         minibridge_helper = MiniBridgeHelper(key, f"[{index}/{total}]")

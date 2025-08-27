@@ -14,25 +14,25 @@ logger.add(
 # Network data
 CHAIN_DATA = {
     "ethereum": {
-        "rpc": "https://rpc.ankr.com/eth",
+        "rpc": "https://1rpc.io/eth",
         "explorer": "https://etherscan.io",
         "token": "ETH",
         "chain_id": 1,
     },
-    "linea": {
-        "rpc": "https://rpc.linea.build",
-        "explorer": "https://lineascan.build",
-        "token": "ETH",
-        "chain_id": 59144,
-    },
+    # "linea": {
+    #     "rpc": "https://rpc.linea.build",
+    #     "explorer": "https://lineascan.build",
+    #     "token": "ETH",
+    #     "chain_id": 59144,
+    # },
     "arbitrum": {
-        "rpc": "https://rpc.ankr.com/arbitrum",
+        "rpc": "https://arbitrum.drpc.org",
         "explorer": "https://arbiscan.io",
         "token": "ETH",
         "chain_id": 42161,
     },
     "optimism": {
-        "rpc": "https://rpc.ankr.com/optimism",
+        "rpc": "https://mainnet.optimism.io",
         "explorer": "https://optimistic.etherscan.io",
         "token": "ETH",
         "chain_id": 10,
@@ -73,10 +73,12 @@ MIN_SEND_VALUE = 100000000000000  # 0.0001 ETH
 MAX_SEND_VALUE = 50000000000000000  # 0.05 ETH
 BITLAYER_INTERALID = 832
 
+GASZIP_DIRECT_DEPOSIT_ADDRESS = "0x391E7C679d29bD940d63be94AD22A25d25b5A604"
+GASZIP_DATA = "0x010093"
+
+
 # Infinite amount for max approve
-INFINITE_AMOUNT = (
-    115792089237316195423570985008687907853269984665640564039457584007913129639935
-)
+INFINITE_AMOUNT = 115792089237316195423570985008687907853269984665640564039457584007913129639935
 
 # ABI
 with open("data/abi/ERC20.json") as f:
