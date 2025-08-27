@@ -370,8 +370,9 @@ class Bitlayer(Wallet):
     def get_awards(self):
         data = self.client.get_awards()
         headers = ["Wallet", "Bronze", "Silver", "Gold", "Total"]
+        date = datetime.today().strftime("%Y-%m-%d")
         data = [
             [self.address, data["bronze"]["amount"], data["silver"]["amount"], data["gold"]["amount"], data["amount"]]
         ]
-        create_csv(f"reports/awards-{datetime.now():%d_%m_%Y_%H_%M_%S}.csv", "a", headers, data)
+        create_csv(f"reports/awards-{date}.csv", "a", headers, data)
         return True
