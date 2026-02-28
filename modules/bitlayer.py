@@ -399,7 +399,7 @@ class Bitlayer(Wallet):
 
         return self.send_tx(
             contract_tx,
-            tx_label=f"{self.label} Claim Airdrop [{self.tx_count}]",
+            tx_label=f"{self.label} Claim {claimable_amount / 10**18} BTR [{self.tx_count}]",
         )
 
     def send_btr_to_exchange(self, recipient):
